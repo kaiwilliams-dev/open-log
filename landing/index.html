@@ -11,12 +11,14 @@
   <style>
     :root{--s:#D4775C;--s2:#C0613F;--ink:#1A1A1A;--i2:#444;--i3:#777;--i4:#AAA;--bg:#FAFAF9;--w:#FFF;--r:#E8E8E5}
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Poppins',sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+    body{font-family:'Poppins',sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+    html{scroll-behavior:smooth}
     a{color:var(--s);text-decoration:none}
     a:hover{text-decoration:underline}
 
     nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,250,249,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--r);padding:0 40px;height:56px;display:flex;align-items:center;justify-content:space-between}
-    .nav-logo{font-size:20px;font-weight:700;letter-spacing:-0.5px}
+    .nav-logo{font-size:20px;font-weight:400;letter-spacing:-0.5px}
+    .nav-logo b{font-weight:700}
     .nav-links{display:flex;gap:28px;align-items:center}
     .nav-links a{color:var(--i2);font-size:14px;font-weight:400}
     .nav-links a:hover{color:var(--ink);text-decoration:none}
@@ -25,7 +27,7 @@
 
     .hero{padding:140px 40px 60px;max-width:880px;margin:0 auto;text-align:center}
     .hero-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:11px;color:var(--s);border:1px solid var(--s);border-radius:20px;padding:4px 14px;margin-bottom:28px;letter-spacing:0.3px}
-    .hero h1{font-size:52px;font-weight:800;letter-spacing:-2.5px;line-height:1.08;margin-bottom:24px}
+    .hero h1{font-size:52px;font-weight:600;letter-spacing:-2.5px;line-height:1.08;margin-bottom:24px}
     .hero h1 span{color:var(--s)}
     .hero p{font-size:17px;color:var(--i2);font-weight:300;line-height:1.7;max-width:580px;margin:0 auto 40px}
     .hero-actions{display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap}
@@ -46,12 +48,12 @@
     /* Stats bar */
     .stats-bar{max-width:800px;margin:64px auto 0;padding:0 40px;display:flex;justify-content:center;gap:48px;flex-wrap:wrap}
     .stat-item{text-align:center}
-    .stat-num{font-size:32px;font-weight:700;letter-spacing:-1px}
+    .stat-num{font-size:32px;font-weight:600;letter-spacing:-1px}
     .stat-label{font-size:12px;color:var(--i3);font-weight:300;margin-top:2px}
 
     /* Problem section */
     .problem{max-width:800px;margin:100px auto;padding:0 40px}
-    .problem h2{font-size:36px;font-weight:700;letter-spacing:-1px;margin-bottom:20px;text-align:center}
+    .problem h2{font-size:36px;font-weight:600;letter-spacing:-1px;margin-bottom:20px;text-align:center}
     .problem-text{font-size:16px;color:var(--i2);line-height:1.8;font-weight:300;max-width:640px;margin:0 auto 40px;text-align:center}
     .problem-quote{border-left:3px solid var(--s);padding:20px 24px;background:var(--w);border-radius:0 8px 8px 0;max-width:640px;margin:0 auto}
     .problem-quote p{font-size:15px;color:var(--i2);font-style:italic;line-height:1.7;margin-bottom:8px}
@@ -59,14 +61,14 @@
 
     .features{max-width:1000px;margin:100px auto;padding:0 40px}
     .features-header{text-align:center;margin-bottom:56px}
-    .features-header h2{font-size:36px;font-weight:700;letter-spacing:-1px;margin-bottom:12px}
+    .features-header h2{font-size:36px;font-weight:600;letter-spacing:-1px;margin-bottom:12px}
     .features-header p{font-size:15px;color:var(--i3);font-weight:300}
     .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
     .feature{padding:28px;border:1px solid var(--r);border-radius:10px;background:var(--w);transition:all .2s}
     .feature:hover{border-color:#ccc;transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.03)}
     .feature-icon{width:36px;height:36px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
     .feature-icon svg{width:18px;height:18px;stroke:var(--s);stroke-width:1.5;fill:none}
-    .feature h3{font-size:15px;font-weight:600;margin-bottom:8px}
+    .feature h3{font-size:15px;font-weight:500;margin-bottom:8px}
     .feature p{font-size:13px;color:var(--i3);line-height:1.65;font-weight:300}
 
     /* Screenshot gallery */
@@ -77,12 +79,13 @@
     .gallery-item-label{padding:12px 16px;font-size:12px;font-weight:500;color:var(--i2);border-top:1px solid var(--r)}
 
     .how{max-width:800px;margin:100px auto;padding:0 40px}
-    .how h2{font-size:36px;font-weight:700;letter-spacing:-1px;margin-bottom:48px;text-align:center}
+    .how h2{font-size:36px;font-weight:600;letter-spacing:-1px;margin-bottom:48px;text-align:center}
     .step{display:flex;gap:24px;margin-bottom:36px;align-items:flex-start}
     .step-num{width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--w);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;flex-shrink:0}
     .step h3{font-size:16px;font-weight:600;margin-bottom:4px}
     .step p{font-size:14px;color:var(--i3);line-height:1.6;font-weight:300}
-    .step code{font-family:'DM Mono',monospace;font-size:12px;background:var(--ink);color:#999;padding:10px 16px;border-radius:6px;display:block;margin-top:8px}
+    .step .code-block{font-family:'DM Mono',monospace;font-size:12px;background:var(--ink);color:#999;padding:10px 16px;border-radius:6px;display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+    .step .code-block span{color:var(--s)}
     .step code span{color:var(--s)}
 
     /* Peak hours callout */
@@ -98,10 +101,10 @@
     .peak-time .value{font-size:18px;font-weight:600}
 
     .pricing{max-width:500px;margin:100px auto;padding:0 40px;text-align:center}
-    .pricing h2{font-size:36px;font-weight:700;letter-spacing:-1px;margin-bottom:12px}
+    .pricing h2{font-size:36px;font-weight:600;letter-spacing:-1px;margin-bottom:12px}
     .pricing>p{font-size:15px;color:var(--i3);font-weight:300;margin-bottom:40px}
     .price-card{border:2px solid var(--ink);border-radius:12px;padding:40px;background:var(--w)}
-    .price-amount{font-size:48px;font-weight:800;letter-spacing:-2px;margin-bottom:4px}
+    .price-amount{font-size:48px;font-weight:600;letter-spacing:-2px;margin-bottom:4px}
     .price-label{font-size:14px;color:var(--i3);margin-bottom:24px}
     .price-features{list-style:none;text-align:left;margin-bottom:28px}
     .price-features li{font-size:13px;color:var(--i2);padding:8px 0;border-bottom:1px solid var(--r);display:flex;align-items:center;gap:10px}
@@ -127,7 +130,7 @@
 <body>
 
 <nav>
-  <div class="nav-logo">OpenLog</div>
+  <div class="nav-logo">Open<b>Log</b></div>
   <div class="nav-links">
     <a href="#features">Features</a>
     <a href="#how">Setup</a>
@@ -216,7 +219,7 @@
     <div class="feature">
       <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
       <h3>Session awareness</h3>
-      <p>Every running Claude instance — Terminal, T3 Code, VS Code — listed with PID, project directory, and runtime.</p>
+      <p>Every running Claude instance — Terminal, T3 Code, VS Code — each listed with PID, project directory, and runtime.</p>
     </div>
     <div class="feature">
       <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
@@ -265,7 +268,7 @@
     <div>
       <h3>Clone and install</h3>
       <p>Two dependencies: Bun and tmux. If you don't have them, one Homebrew command each.</p>
-      <code><span>$</span> git clone https://github.com/kaiwilliams-dev/open-log.git && cd open-log && bun install</code>
+      <div class="code-block"><span>$ git clone https://github.com/kaiwilliams-dev/open-log.git && cd open-log && bun install</span><button class="copy-btn" onclick="navigator.clipboard.writeText('git clone https://github.com/kaiwilliams-dev/open-log.git && cd open-log && bun install');this.textContent='Copied!'">Copy</button></div>
     </div>
   </div>
   <div class="step">
@@ -273,7 +276,7 @@
     <div>
       <h3>Start the server</h3>
       <p>Reads your local data from ~/.claude/projects/. No API keys. No accounts. Zero data leaves your machine.</p>
-      <code><span>$</span> bun run start</code>
+      <div class="code-block"><span>$ bun run start</span><button class="copy-btn" onclick="navigator.clipboard.writeText('bun run start');this.textContent='Copied!'">Copy</button></div>
     </div>
   </div>
   <div class="step">
@@ -281,7 +284,7 @@
     <div>
       <h3>See your numbers</h3>
       <p>Click Sync Now. Within 5 seconds you'll see your exact usage percentage, token costs, and burn rate. Done.</p>
-      <code>http://localhost:7777</code>
+      <div class="code-block"><span>http://localhost:7777</span><button class="copy-btn" onclick="navigator.clipboard.writeText('http://localhost:7777');this.textContent='Copied!'">Copy</button></div>
     </div>
   </div>
 </section>
@@ -299,7 +302,7 @@
       <li>Skill and hook analytics with 7-day trends</li>
       <li>Monthly spending history with daily granularity</li>
       <li>Hourly activity heatmap with click-to-detail</li>
-      <li>Cross-IDE session monitoring (Terminal, T3, VS Code)</li>
+      <li>Cross-IDE session monitoring (Terminal, T3 Code, VS Code)</li>
       <li>100% local — nothing phones home, ever</li>
     </ul>
     <a href="https://github.com/kaiwilliams-dev/open-log" class="price-btn" target="_blank">Get OpenLog on GitHub</a>
