@@ -219,7 +219,7 @@
       <span id="sync-text" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--i4)">Sync: checking...</span>
       <button id="sync-btn" style="margin-left:auto;font-family:'DM Mono',monospace;font-size:9px;padding:3px 10px;border:1px solid var(--r);border-radius:3px;color:var(--i2);background:var(--w);cursor:pointer">Sync Now</button>
     </div>
-    <div id="sync-log" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--i3);max-height:150px;overflow-y:auto;display:none"></div>
+    <div id="sync-log" style="display:none"></div>
   </div>
   <section class="sec" id="dash">
     <h1 class="h1">Dashboard</h1>
@@ -328,21 +328,7 @@ async function updateSyncBar(){
       document.getElementById('sync-dot').className='sync-dot active';
       document.getElementById('sync-text').textContent=`Last sync: ${age<60?age+'s':Math.floor(age/60)+'m'} ago`;
     }else{document.getElementById('sync-text').textContent='No sync data yet'}
-    // Show recent auto-sync history in the log panel (last 8)
-    const log=document.getElementById('sync-log');
-    const recent=(h.entries||[]).slice(-8);
-    if(recent.length&&log.innerHTML===''){
-      log.style.display='block';
-      log.innerHTML=recent.map(e=>{
-        const dt=new Date((e.ts||0)*1000);
-        const t=dt.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-        const pct=e.limits?.five_hour?.pct;
-        const ok=e.success&&pct!=null;
-        const color=ok?'#2E7D32':'#C0392B';
-        return`<div style="padding:2px 0;color:${color}">${t} ${ok?'Auto-sync: '+pct+'% session ('+Math.round(e.elapsed_ms/1000)+'s)':'Sync failed ('+Math.round(e.elapsed_ms/1000)+'s)'}</div>`;
-      }).join('');
-      log.scrollTop=log.scrollHeight;
-    }
+    // Sync log disabled — clean UI
   }catch(e){}}
 
 // ── Usage ──
@@ -570,39 +556,27 @@ async function loadSe(){try{const d=await A('/api/sessions'),el=document.getElem
   }).join('')}catch(e){}}
 
 // ── Sync Now button ──
-function slog(msg,color){
-  const el=document.getElementById('sync-log');
-  el.style.display='block';
-  const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  el.innerHTML+=`<div style="padding:2px 0;${color?'color:'+color:''}">${t} ${msg}</div>`;
-  el.scrollTop=el.scrollHeight;
-}
+function slog(msg,color){/* logs disabled */}
 document.getElementById('sync-btn').onclick=async()=>{
   const btn=document.getElementById('sync-btn');
   const st=document.getElementById('sync-text');
-  const log=document.getElementById('sync-log');
-  log.innerHTML='';log.style.display='block';
   btn.disabled=true;btn.textContent='Syncing...';
-  const t0=Date.now();
-  slog('Starting sync via tmux (~18s)...');
   st.textContent='Syncing...';
-  try{
-    const r=await fetch('/api/sync-limits',{method:'POST'});
-    const d=await r.json();
-    const elapsed=Date.now()-t0;
-    slog(`Server responded in ${elapsed}ms (${(elapsed/1000).toFixed(1)}s)`);
-    if(d.limits_captured){
-      slog(`Limits captured: session=${d.limits?.five_hour?.pct}% weekly=${d.limits?.seven_day?.pct}%`,'#2E7D32');
-      slog(`Elapsed: ${d.elapsed_ms}ms`);
-      st.textContent='Synced! Refreshing...';
-      await loadUsage();await updateSyncBar();
-      slog('Dashboard updated','#2E7D32');
-    }else{
-      slog('No limits captured — Claude may have been rate limited','#C0392B');
-      if(d.error)slog('Error: '+d.error,'#C0392B');
-      st.textContent='Sync done but no limits captured';
-    }
-  }catch(e){slog('Fetch failed: '+e.message,'#C0392B');st.textContent='Sync failed'}
+  let success=false;
+  for(let attempt=1;attempt<=2;attempt++){
+    try{
+      if(attempt===2)st.textContent='Retrying...';
+      const r=await fetch('/api/sync-limits',{method:'POST'});
+      const d=await r.json();
+      if(d.limits_captured){
+        st.textContent=`Synced: ${d.limits?.five_hour?.pct}% session`;
+        await loadUsage();await updateSyncBar();
+        success=true;break;
+      }
+    }catch(e){}
+    if(attempt===1)await new Promise(r=>setTimeout(r,1000));
+  }
+  if(!success)st.textContent='Sync failed — try again';
   btn.disabled=false;btn.textContent='Sync Now';
 };
 

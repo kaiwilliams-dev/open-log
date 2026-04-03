@@ -76,10 +76,25 @@ if ! grep -q "openlog.local" /etc/hosts 2>/dev/null; then
     echo "  Skipped (no sudo). Access via localhost:${PORT} instead."
 fi
 
+# Port redirect: 80 → 7777 so http://openlog.local works without :port
+ANCHOR_FILE="/etc/pf.anchors/openlog"
+if [ ! -f "$ANCHOR_FILE" ]; then
+  echo ""
+  echo "  Setting up port redirect (80 → ${PORT})..."
+  sudo sh -c "echo 'rdr pass on lo0 inet proto tcp from any to 127.0.0.1 port 80 -> 127.0.0.1 port ${PORT}' > /etc/pf.anchors/openlog" 2>/dev/null
+  # Add anchor to pf.conf if not present
+  if ! grep -q "openlog" /etc/pf.conf 2>/dev/null; then
+    sudo sh -c 'echo "rdr-anchor \"openlog\"" >> /etc/pf.conf && echo "load anchor \"openlog\" from \"/etc/pf.anchors/openlog\"" >> /etc/pf.conf' 2>/dev/null
+  fi
+  sudo pfctl -ef /etc/pf.conf 2>/dev/null && \
+    echo "  Port redirect active: http://openlog.local" || \
+    echo "  Port redirect failed. Use http://openlog.local:${PORT} instead."
+fi
+
 echo ""
 echo "  Done. OpenLog is now running at:"
 echo ""
-echo "    http://openlog.local:${PORT}"
+echo "    http://openlog.local"
 echo "    http://localhost:${PORT}"
 echo ""
 echo "  It will auto-start on login."
