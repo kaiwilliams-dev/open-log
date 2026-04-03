@@ -64,6 +64,8 @@
     .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
     .feature{padding:28px;border:1px solid var(--r);border-radius:10px;background:var(--w);transition:all .2s}
     .feature:hover{border-color:#ccc;transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.03)}
+    .feature-icon{width:36px;height:36px;border-radius:8px;background:var(--bg);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+    .feature-icon svg{width:18px;height:18px;stroke:var(--s);stroke-width:1.5;fill:none}
     .feature h3{font-size:15px;font-weight:600;margin-bottom:8px}
     .feature p{font-size:13px;color:var(--i3);line-height:1.65;font-weight:300}
 
@@ -177,38 +179,47 @@
   </div>
   <div class="features-grid">
     <div class="feature">
+      <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg></div>
       <h3>Real usage percentage</h3>
       <p>Not estimated. Synced directly from Anthropic's API response headers. Session and weekly limits, exact to the percent.</p>
     </div>
     <div class="feature">
+      <div class="feature-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
       <h3>Dollar cost per session</h3>
       <p>Input tokens, output tokens, cache creation, cache read — each priced out. Know which operations cost the most.</p>
     </div>
     <div class="feature">
+      <div class="feature-icon"><svg viewBox="0 0 24 24"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg></div>
       <h3>Burn rate forecasting</h3>
       <p>See your %/hour rate and a countdown to 100%. Know whether to keep pushing or save your budget for later.</p>
     </div>
     <div class="feature">
+      <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
       <h3>Skills tracking</h3>
       <p>50 skills installed and no idea which ones fire? See trigger counts, 7-day trends, and daily breakdowns per skill.</p>
     </div>
     <div class="feature">
+      <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
       <h3>Hook observability</h3>
       <p>Every PreToolUse, PostToolUse, Stop, and SessionStart hook — tracked with fire counts, daily patterns, and command details.</p>
     </div>
     <div class="feature">
+      <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
       <h3>Hourly heatmap</h3>
       <p>7-day grid showing exactly when you're active. Click any cell for triggers, costs, skills, and hooks in that hour.</p>
     </div>
     <div class="feature">
+      <div class="feature-icon"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
       <h3>Spending history</h3>
       <p>Monthly cost graph with daily granularity. Spot the days that burned $500+ and figure out what drove them.</p>
     </div>
     <div class="feature">
+      <div class="feature-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
       <h3>Session awareness</h3>
       <p>Every running Claude instance — Terminal, T3 Code, VS Code — listed with PID, project directory, and runtime.</p>
     </div>
     <div class="feature">
+      <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div>
       <h3>Peak hour detection</h3>
       <p>Anthropic throttles during 1&ndash;7pm GMT on weekdays. OpenLog shows you when to shift compute-heavy work to off-peak hours.</p>
     </div>
@@ -248,7 +259,7 @@
 </section>
 
 <section class="how" id="how">
-  <h2>Set up in 60 seconds. Not a typo.</h2>
+  <h2>Set up in 60 seconds</h2>
   <div class="step">
     <div class="step-num">1</div>
     <div>
