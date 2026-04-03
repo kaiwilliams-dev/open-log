@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OpenLog — Limits Sync Test</title>
+  <style>
+    body{font-family:'DM Mono',monospace;padding:40px;background:#fff;color:#1a1a1a;max-width:900px;margin:0 auto;font-size:13px}
+    h1{font-family:'DM Sans',sans-serif;font-size:24px;margin-bottom:8px;font-weight:400}
+    p.sub{color:#999;margin-bottom:32px;font-size:13px}
+    .card{border:1px solid #e5e5e5;padding:20px;margin-bottom:20px;border-radius:4px}
+    .card h2{font-size:14px;font-weight:500;margin-bottom:12px;font-family:'DM Sans',sans-serif}
+    .row{display:flex;gap:32px;margin-bottom:24px}
+    .row>div{flex:1}
+    .label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#bbb;margin-bottom:4px}
+    .big{font-size:36px;font-family:'Libre Baskerville',serif;margin-bottom:4px}
+    .ok{color:#2E7D32}.err{color:#C0392B}.warn{color:#E67E22}.muted{color:#999}
+    button{font-family:'DM Mono',monospace;font-size:13px;padding:10px 24px;border:2px solid #D4775C;color:#D4775C;background:none;border-radius:6px;cursor:pointer;transition:all .15s}
+    button:hover{background:#D4775C;color:#fff}
+    button:disabled{opacity:.4;cursor:default;background:none;color:#D4775C}
+    .log{background:#fafafa;border:1px solid #f0f0f0;border-radius:4px;padding:16px;max-height:400px;overflow-y:auto;font-size:12px;line-height:1.8}
+    .log-line{border-bottom:1px solid #f0f0f0;padding:4px 0}
+    .log-line:last-child{border-bottom:none}
+    .log-time{color:#bbb;margin-right:8px}
+    .log-ok{color:#2E7D32}.log-err{color:#C0392B}.log-info{color:#555}.log-warn{color:#E67E22}
+    pre{font-size:11px;color:#555;background:#fafafa;padding:12px;overflow:auto;border-radius:4px;margin-top:8px;border:1px solid #f0f0f0}
+    .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+    .status-dot.green{background:#2E7D32}.status-dot.red{background:#C0392B}.status-dot.yellow{background:#E67E22}.status-dot.gray{background:#bbb}
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <h1>OpenLog — Limits Sync Test</h1>
+  <p class="sub">Test the headless Claude ping to capture rate limits for T3/VS Code users</p>
+
+  <!-- Current State -->
+  <div class="card">
+    <h2>Current Limits State</h2>
+    <div class="row">
+      <div><div class="label">Session %</div><div class="big" id="s-pct">—</div></div>
+      <div><div class="label">Weekly %</div><div class="big" id="w-pct">—</div></div>
+      <div><div class="label">Source</div><div class="big" style="font-size:16px" id="s-src">—</div></div>
+      <div><div class="label">Age</div><div class="big" style="font-size:16px" id="s-age">—</div></div>
+    </div>
+  </div>
+
+  <!-- Trigger -->
+  <div class="card">
+    <h2>Manual Sync</h2>
+    <p style="color:#999;margin-bottom:16px">Spawns a headless Claude instance, sends "hi", captures rate_limits from the statusline hook response</p>
+    <button id="sync-btn" onclick="doSync()">Sync Now</button>
+    <span id="sync-status" style="margin-left:16px"></span>
+  </div>
+
+  <!-- Log -->
+  <div class="card">
+    <h2>Log</h2>
+    <div class="log" id="log">
+      <div class="log-line log-info">Ready. Click "Sync Now" to test.</div>
+    </div>
+  </div>
+
+  <!-- Raw Data -->
+  <div class="card">
+    <h2>Raw API Responses</h2>
+    <div class="label">GET /api/limits</div>
+    <pre id="raw-limits">...</pre>
+    <div class="label" style="margin-top:16px">GET /api/sync-limits (the headless ping)</div>
+    <pre id="raw-sync">Click "Sync Now" to trigger</pre>
+  </div>
+
+  <script>
+    const logEl = document.getElementById('log');
+
+    function log(msg, cls='log-info') {
+      const time = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      logEl.innerHTML += `<div class="log-line ${cls}"><span class="log-time">${time}</span>${msg}</div>`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    async function loadState() {
+      try {
+        const r = await fetch('/api/limits');
+        const d = await r.json();
+        document.getElementById('raw-limits').textContent = JSON.stringify(d, null, 2);
+
+        if (d.available && d.five_hour?.pct != null) {
+          document.getElementById('s-pct').textContent = d.five_hour.pct.toFixed(1) + '%';
+          document.getElementById('s-pct').className = 'big ok';
+          document.getElementById('w-pct').textContent = (d.seven_day?.pct ?? 0).toFixed(1) + '%';
+          document.getElementById('s-src').innerHTML = `<span class="status-dot ${d.stale ? 'yellow' : 'green'}"></span>${d.stale ? 'Stale' : 'Live'}`;
+          document.getElementById('s-age').textContent = d.age_seconds + 's ago';
+        } else {
+          document.getElementById('s-pct').textContent = '—';
+          document.getElementById('s-pct').className = 'big muted';
+          document.getElementById('w-pct').textContent = '—';
+          document.getElementById('s-src').innerHTML = '<span class="status-dot gray"></span>No data';
+          document.getElementById('s-age').textContent = '—';
+        }
+      } catch(e) {
+        document.getElementById('raw-limits').textContent = 'Error: ' + e.message;
+      }
+    }
+
+    async function doSync() {
+      const btn = document.getElementById('sync-btn');
+      const status = document.getElementById('sync-status');
+      btn.disabled = true;
+      status.innerHTML = '<span class="warn">Syncing...</span>';
+
+      log('Starting headless Claude sync...', 'log-info');
+      log('POST /api/sync-limits', 'log-info');
+
+      try {
+        const start = Date.now();
+        const r = await fetch('/api/sync-limits', { method: 'POST' });
+        const d = await r.json();
+        const elapsed = Date.now() - start;
+
+        document.getElementById('raw-sync').textContent = JSON.stringify(d, null, 2);
+
+        if (d.success) {
+          log(`Headless Claude responded in ${elapsed}ms`, 'log-ok');
+          log(`Claude output: "${d.claude_response?.slice(0, 80) || '?'}"`, 'log-info');
+          log(`Cost: $${d.cost?.toFixed(4) || '?'}`, 'log-info');
+
+          if (d.limits_captured) {
+            log(`Session: ${d.limits?.five_hour?.pct}% | Weekly: ${d.limits?.seven_day?.pct}%`, 'log-ok');
+            log('Limits written to ~/.openlog/limits.json', 'log-ok');
+            status.innerHTML = '<span class="ok">Synced!</span>';
+          } else {
+            log('Claude responded but limits not captured. Check statusline hook.', 'log-warn');
+            status.innerHTML = '<span class="warn">Partial — no limits in response</span>';
+          }
+        } else {
+          log(`Sync failed: ${d.error}`, 'log-err');
+          if (d.raw_output) log(`Raw: ${d.raw_output.slice(0, 200)}`, 'log-err');
+          status.innerHTML = '<span class="err">Failed</span>';
+        }
+
+        // Reload state after sync
+        setTimeout(loadState, 500);
+      } catch(e) {
+        log(`Network error: ${e.message}`, 'log-err');
+        status.innerHTML = '<span class="err">Error</span>';
+        document.getElementById('raw-sync').textContent = 'Error: ' + e.message;
+      }
+
+      btn.disabled = false;
+    }
+
+    loadState();
+    setInterval(loadState, 5000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+{
+  "name": "openlog",
+  "version": "0.1.0",
+  "description": "Local Claude Code analytics dashboard — see your skills, hooks, usage, and activity in real time.",
+  "author": "Kai",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "start": "bun run server.ts",
+    "dev": "bun --watch run server.ts",
+    "install-service": "bash install.sh",
+    "uninstall-service": "bash uninstall.sh"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "analytics",
+    "dashboard",
+    "skills",
+    "hooks",
+    "usage-tracker"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kai/openlog"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-code": "^2.1.91",
+    "node-pty": "^1.1.0"
+  }
+}

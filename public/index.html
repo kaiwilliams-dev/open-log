@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenLog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{--s:#D4775C;--ink:#1A1A1A;--i2:#555;--i3:#999;--i4:#BBB;--r:#E5E5E5;--r2:#F0F0F0;--bg:#FAFAFA;--w:#FFF;--neg:#C0392B;--pos:#2E7D32;--warn:#E67E22;--sw:220px}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--w);display:flex;height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased}
+    a{color:inherit;text-decoration:none}button{cursor:pointer;border:none;background:none;font:inherit}
+
+    #sb{width:var(--sw);height:100vh;display:flex;flex-direction:column;border-right:1px solid var(--r);position:fixed;top:0;left:0;z-index:100;background:var(--w)}
+    .logo{padding:24px 20px 20px;border-bottom:1px solid var(--r2);font-family:'Poppins',sans-serif;font-size:20px}
+    .logo b{color:var(--ink);font-weight:600}
+    .sn{flex:1;padding:16px 0;overflow-y:auto}
+    .sg+.sg{margin-top:14px}
+    .sl{display:block;padding:6px 20px 3px;font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--i4)}
+    .si{display:block;padding:7px 20px;font-size:13px;color:var(--i2);cursor:pointer;position:relative;transition:all .1s}
+    .si:hover{color:var(--ink);background:var(--r2)}
+    .si.on{color:var(--ink);background:#F9EDE9}
+    .si.on::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--s)}
+    .sf{padding:16px 20px;border-top:1px solid var(--r2);display:flex;align-items:center;gap:10px}
+    .av{width:28px;height:28px;border-radius:50%;background:var(--s);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'DM Mono',monospace;font-size:11px;font-weight:500}
+
+    #m{margin-left:var(--sw);flex:1;height:100vh;overflow-y:auto;scroll-behavior:smooth}
+    .sec{padding:40px 48px;border-bottom:1px solid var(--r)}
+    .sh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px}
+    .st{font-family:'Poppins',sans-serif;font-size:22px;font-weight:400}
+    .h1{font-family:'Poppins',sans-serif;font-size:34px;font-weight:400;letter-spacing:-.5px;padding-bottom:10px;border-bottom:1px solid var(--ink);display:inline-block;margin-bottom:6px}
+    .sub{font-size:13px;color:var(--i3);font-weight:300;margin-bottom:28px}
+    .mono{font-family:'DM Mono',monospace}.serif{font-family:'Poppins',sans-serif}
+    .ld{font-family:'DM Mono',monospace;font-size:11px;color:var(--i4)}
+
+    /* Usage hero */
+    .ug{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-bottom:28px}
+    .ub{font-family:'Poppins',sans-serif;font-size:44px;letter-spacing:-1px;line-height:1;margin-bottom:4px}
+    .ul{font-size:12px;color:var(--i3);font-weight:300;margin-bottom:10px}
+    .ubt{height:5px;background:var(--r2);border-radius:3px;overflow:hidden;margin-bottom:6px}
+    .ubf{height:100%;background:var(--s);border-radius:3px;transition:width .5s ease}
+    .ubf.ov{background:var(--neg)}
+    .ur{display:flex;align-items:baseline;gap:6px;margin-bottom:3px}
+    .up{font-family:'Poppins',sans-serif;font-size:24px;letter-spacing:-.3px}
+    .us{font-size:12px;color:var(--i3)}
+    .uw{font-family:'DM Mono',monospace;font-size:10px;color:var(--i4);margin-bottom:3px}
+    .uwk{font-size:12px;color:var(--i2);margin-top:6px}
+    .uwk strong{font-weight:500}
+    .usc{font-family:'DM Mono',monospace;font-size:10px;margin-top:10px}
+    .cg{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--r);border-radius:2px}
+    .cc{padding:12px 14px;border-right:1px solid var(--r)}
+    .cc:last-child{border-right:none}
+    .cl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--i4);margin-bottom:4px}
+    .ct{font-size:12px;color:var(--i2);margin-bottom:1px}
+    .cv{font-family:'DM Mono',monospace;font-size:11px;color:var(--i3)}
+    .ga{padding:14px 16px;border:1px solid var(--r);border-radius:5px;display:flex;align-items:center;gap:14px;margin-top:14px}
+    .gd{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+    .gt{font-size:13px;font-weight:500}
+    .gdt{font-size:11px;color:var(--i3);font-weight:300}
+    .sr{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--r);border-radius:2px}
+    .si2{padding:18px;border-right:1px solid var(--r)}
+    .si2:last-child{border-right:none}
+    .si2l{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--i4);margin-bottom:6px}
+    .si2v{font-family:'Poppins',sans-serif;font-size:26px;line-height:1}
+
+    /* History */
+    .hc{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+    .hm{font-family:'Poppins',sans-serif;font-size:16px;min-width:160px;text-align:center}
+    .ha{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--r);border-radius:4px;color:var(--i3);font-size:14px}
+    .ha:disabled{opacity:.3}
+    .hw{position:relative;margin-bottom:16px}
+    #hc{width:100%;height:220px;display:block}
+    .ht{position:absolute;display:none;background:var(--ink);color:#fff;font-family:'DM Mono',monospace;font-size:10px;padding:6px 10px;border-radius:3px;pointer-events:none;z-index:10;line-height:1.5;white-space:nowrap}
+    .hs{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--r);border-radius:2px}
+    .hsi{padding:12px 14px;border-right:1px solid var(--r)}
+    .hsi:last-child{border-right:none}
+    .hsl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--i4);margin-bottom:3px}
+    .hsv{font-family:'Poppins',sans-serif;font-size:16px}
+
+    /* Activity */
+    .bc{display:flex;align-items:flex-end;gap:6px;height:200px;margin-bottom:8px}
+    .bg{flex:1;display:flex;flex-direction:column;align-items:center}
+    .bs{display:flex;align-items:flex-end;gap:1px;width:100%;height:160px}
+    .b{flex:1;border-radius:1px 1px 0 0;min-height:1px;background:var(--s)}
+    .bl{font-family:'DM Mono',monospace;font-size:8px;color:var(--i4);margin-top:4px}
+    .fi{display:grid;grid-template-columns:6px 1fr auto;gap:12px;align-items:start;padding:8px 0;border-bottom:1px solid var(--r2)}
+    .fi:last-child{border-bottom:none}
+    .fd{width:6px;height:6px;border-radius:50%;margin-top:4px}
+    .fd.skill{background:var(--s)}.fd.hook{background:var(--i4)}.fd.error{background:var(--neg)}
+    .fn{font-size:12px;font-weight:500;margin-bottom:1px}
+    .fdt{font-size:11px;color:var(--i3);font-weight:300}
+    .ft{font-family:'DM Mono',monospace;font-size:10px;color:var(--i4);white-space:nowrap}
+
+    /* Skills */
+    .sk th{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--i4);font-weight:500;padding:0 0 10px;text-align:left;border-bottom:1px solid var(--ink)}
+    .sk td{padding:12px 0;border-bottom:1px solid var(--r2);font-size:12px;vertical-align:middle}
+    .sk tr:last-child td{border-bottom:none}
+    .sk tbody tr:hover td{background:#FBF1EE}
+    .sk th+th,.sk td+td{padding-left:16px}
+    .skn{display:flex;align-items:center;gap:8px;font-weight:500}
+    .skd{width:6px;height:6px;border-radius:50%;background:var(--s);flex-shrink:0}
+    .sb{font-family:'DM Mono',monospace;font-size:10px}
+    .sb.active{color:var(--pos)}.sb.idle{color:var(--i3)}.sb.dormant{color:var(--i4)}.sb.error{color:var(--neg)}
+    .sp{display:flex;align-items:flex-end;gap:1px;height:16px}
+    .spb{width:3px;background:var(--s);border-radius:1px;opacity:.5;min-height:1px}
+
+    /* Hooks */
+    .hi{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--r2)}
+    .hi:last-child{border-bottom:none}
+    .he{font-family:'DM Mono',monospace;font-size:10px;background:var(--bg);border:1px solid var(--r);padding:3px 8px;color:var(--i2);white-space:nowrap}
+    .hn{font-size:12px;font-weight:500;margin-bottom:1px}
+    .hd{font-size:11px;color:var(--i3);font-weight:300}
+    .hcn{font-family:'Poppins',sans-serif;font-size:18px;text-align:right}
+    .hcl{font-family:'DM Mono',monospace;font-size:9px;color:var(--i4);text-transform:uppercase;text-align:right;margin-top:1px}
+
+    /* Heatmap */
+    .hmi{display:flex}
+    .hmds{display:flex;flex-direction:column;gap:2px;margin-right:8px}
+    .hmdl{font-family:'DM Mono',monospace;font-size:9px;color:var(--i4);height:14px;display:flex;align-items:center}
+    .hmg{display:flex;flex-direction:column;gap:2px}
+    .hmr{display:flex;gap:2px}
+    .hmc{width:22px;height:22px;border-radius:3px;background:var(--r2);transition:transform .1s;flex-shrink:0;cursor:pointer}
+    .hmc:hover{transform:scale(1.4);z-index:10}
+    .hmc.sel{outline:2px solid var(--s);outline-offset:1px}
+    .l0{background:var(--r2)}.l1{background:rgba(212,119,92,.18)}.l2{background:rgba(212,119,92,.38)}.l3{background:rgba(212,119,92,.6)}.l4{background:rgba(212,119,92,.8)}.l5{background:rgba(212,119,92,1)}
+    .hmh{display:flex;gap:3px;margin-top:8px}
+    .hmhl{width:22px;font-family:'DM Mono',monospace;font-size:9px;color:var(--i4);text-align:center;flex-shrink:0}
+    .hmds{gap:3px!important}.hmg{gap:3px!important}.hmr{gap:3px!important}
+    .hmdl{height:22px!important;font-size:10px!important}
+
+    /* Pagination */
+    .pag{display:flex;align-items:center;gap:8px}
+    .pag-btn{width:24px;height:24px;display:flex;align-items:center;justify-content:center;border:1px solid var(--r);border-radius:3px;color:var(--i3);font-size:12px}
+    .pag-btn:disabled{opacity:.3}
+    .pag-info{font-family:'DM Mono',monospace;font-size:10px;color:var(--i4)}
+
+    /* Sync timer */
+    .sync-bar{font-family:'DM Mono',monospace;font-size:10px;color:var(--i4);padding:12px 48px;border-bottom:1px solid var(--r2);display:flex;align-items:center;gap:12px;background:var(--bg)}
+    .sync-dot{width:5px;height:5px;border-radius:50%;background:var(--i4)}
+    .sync-dot.active{background:var(--pos);animation:p 1s infinite}
+
+    /* Session app badge */
+    .sea{font-family:'DM Mono',monospace;font-size:8px;padding:1px 5px;border-radius:2px;font-weight:500}
+    .sea.cli{background:#E8F5E9;color:var(--pos)}
+    .sea.ide{background:#FFF3E0;color:var(--warn)}
+    .sea.vsc{background:#E3F2FD;color:#1976D2}
+
+    /* Sessions */
+    .sei{padding:12px 0;border-bottom:1px solid var(--r2);display:grid;grid-template-columns:1fr auto;gap:12px}
+    .sei:last-child{border-bottom:none}
+    .set{display:flex;align-items:center;gap:10px;margin-bottom:3px}
+    .sep{font-family:'DM Mono',monospace;font-size:11px;color:var(--s)}
+    .sek{font-family:'DM Mono',monospace;font-size:9px;background:var(--bg);border:1px solid var(--r);padding:1px 6px;color:var(--i2)}
+    .sed{font-size:11px;color:var(--i3);font-weight:300}
+    .setm{font-family:'DM Mono',monospace;font-size:10px;color:var(--i4);text-align:right;white-space:nowrap}
+
+    .footer{display:flex;justify-content:space-between;padding:20px 48px;font-family:'DM Mono',monospace;font-size:10px;color:var(--i4)}
+
+    /* Limits history bar chart */
+    .lhc{margin-top:16px;border-top:1px solid var(--r2);padding-top:16px}
+    .lhcl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--i4);margin-bottom:10px}
+    .lhbw{display:flex;align-items:flex-end;gap:2px;height:80px;overflow-x:auto;padding-bottom:20px;position:relative}
+    .lhb{flex-shrink:0;width:8px;border-radius:2px 2px 0 0;background:#D4775C;min-height:2px;position:relative;cursor:default;transition:opacity .1s}
+    .lhb:hover{opacity:.75}
+    .lhb.ov{background:#C0392B}
+    .lhbt{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-family:'DM Mono',monospace;font-size:7px;color:var(--i4);white-space:nowrap}
+
+    /* Expand arrow for skills/hooks */
+    .exp-arrow{cursor:pointer;display:inline-block;font-size:10px;color:var(--i4);transition:transform .15s;margin-right:5px;user-select:none;line-height:1}
+    .exp-arrow.open{transform:rotate(90deg);color:var(--s)}
+    .exp-row td{padding:0!important;border-bottom:1px solid var(--r2)}
+    .exp-inner{padding:12px 16px 12px 28px;background:var(--bg)}
+    .exp-bars{display:flex;align-items:flex-end;gap:6px;height:52px}
+    .exp-bar-g{display:flex;flex-direction:column;align-items:center;flex:1}
+    .exp-bar{width:100%;background:var(--s);border-radius:2px 2px 0 0;min-height:2px}
+    .exp-bar-l{font-family:'DM Mono',monospace;font-size:8px;color:var(--i4);margin-top:3px}
+    .hk-exp-inner{padding:10px 12px;background:var(--bg)}
+    .hk-exp-bars{display:flex;align-items:flex-end;gap:6px;height:48px}
+    .hk-exp-bar-g{display:flex;flex-direction:column;align-items:center;flex:1}
+    .hk-exp-bar{width:100%;background:var(--i4);border-radius:2px 2px 0 0;min-height:2px}
+    .hk-exp-bar-l{font-family:'DM Mono',monospace;font-size:8px;color:var(--i4);margin-top:3px}
+
+    /* Heatmap detail panel */
+    .hm-detail{margin-top:16px;border:1px solid var(--r);border-radius:4px;padding:14px 18px;background:var(--w);display:none}
+    .hm-detail.vis{display:block}
+    .hm-detail-title{font-family:'Poppins',sans-serif;font-size:14px;font-weight:500;margin-bottom:6px}
+    .hm-detail-sub{font-size:12px;color:var(--i3);margin-bottom:10px}
+    .hm-detail-count{font-family:'Poppins',sans-serif;font-size:28px;line-height:1;margin-bottom:4px}
+    .hm-detail-cl{font-family:'DM Mono',monospace;font-size:9px;color:var(--i4);text-transform:uppercase;letter-spacing:.1em}
+  </style>
+</head>
+<body>
+<nav id="sb">
+  <div class="logo">Open<b>Log</b></div>
+  <div class="sn">
+    <div class="sg"><span class="sl">Overview</span>
+      <a class="si on" href="#dash" data-s="dash">Dashboard</a>
+      <a class="si" href="#hist" data-s="hist">Usage History</a>
+      <a class="si" href="#act" data-s="act">Activity</a>
+    </div>
+    <div class="sg"><span class="sl">Inventory</span>
+      <a class="si" href="#skills" data-s="skills">Skills</a>
+      <a class="si" href="#hooks" data-s="hooks">Hooks</a>
+      <a class="si" href="#heat" data-s="heat">Heatmap</a>
+    </div>
+    <div class="sg"><span class="sl">System</span>
+      <a class="si" href="#sess" data-s="sess">Sessions</a>
+    </div>
+  </div>
+  <div class="sf"><div class="av">K</div><div><div style="font-size:12px;font-weight:500">Kai</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--s)">Max</div></div></div>
+</nav>
+
+<main id="m">
+  <div id="sync-panel" style="border-bottom:1px solid var(--r2);background:var(--bg);padding:12px 48px">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-text" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--i4)">Sync: checking...</span>
+      <button id="sync-btn" style="margin-left:auto;font-family:'DM Mono',monospace;font-size:9px;padding:3px 10px;border:1px solid var(--r);border-radius:3px;color:var(--i2);background:var(--w);cursor:pointer">Sync Now</button>
+    </div>
+    <div id="sync-log" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--i3);max-height:150px;overflow-y:auto;display:none"></div>
+  </div>
+  <section class="sec" id="dash">
+    <h1 class="h1">Dashboard</h1>
+    <p class="sub">Claude Code usage & analytics</p>
+    <div class="ug"><div id="ul"><span class="ld">Loading...</span></div><div id="ur"><span class="ld">Loading...</span></div></div>
+    <div id="gauge-row" style="margin-bottom:16px"></div>
+    <div id="stats" class="sr">
+      <div class="si2"><div class="si2l">Skills</div><div class="si2v ld">...</div></div>
+      <div class="si2"><div class="si2l">Triggers</div><div class="si2v ld">...</div></div>
+      <div class="si2"><div class="si2l">Avg Response</div><div class="si2v ld">...</div></div>
+      <div class="si2"><div class="si2l">Errors</div><div class="si2v ld">...</div></div>
+    </div>
+    <div id="cost-row" class="cg" style="margin-top:-1px"></div>
+  </section>
+
+  <section class="sec" id="hist">
+    <div class="sh"><h2 class="st">Usage History</h2></div>
+    <div class="hc">
+      <button class="ha" id="hp">&#8592;</button>
+      <div class="hm" id="hml">Loading...</div>
+      <button class="ha" id="hn">&#8594;</button>
+    </div>
+    <div class="hw"><canvas id="hc" height="220"></canvas><div class="ht" id="htt"></div></div>
+    <div class="hs" id="hss">
+      <div class="hsi"><div class="hsl">Month</div><div class="hsv">...</div></div>
+      <div class="hsi"><div class="hsl">Avg/Day</div><div class="hsv">...</div></div>
+      <div class="hsi"><div class="hsl">Peak</div><div class="hsv">...</div></div>
+      <div class="hsi"><div class="hsl">Active</div><div class="hsv">...</div></div>
+    </div>
+    <div class="lhc" id="lhc">
+      <div class="lhcl">Session % — sync history this month</div>
+      <div class="lhbw" id="lhbw"><span class="ld">Loading...</span></div>
+    </div>
+  </section>
+
+  <section class="sec" id="act">
+    <div class="sh"><h2 class="st">Activity</h2></div>
+    <div class="bc" id="bch"><span class="ld">...</span></div>
+    <div style="height:1px;background:var(--r);margin:24px 0"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--r)">
+      <div style="font-size:12px;font-weight:500">Live Feed</div>
+      <div style="display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:9px;color:var(--pos)"><div style="width:5px;height:5px;border-radius:50%;background:var(--pos);animation:p 2s infinite"></div>live</div>
+    </div>
+    <div id="feed"><span class="ld">...</span></div>
+    <style>@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}</style>
+  </section>
+
+  <section class="sec" id="skills">
+    <div class="sh"><h2 class="st">Skills</h2><div class="pag"><button class="pag-btn" id="sk-prev" style="display:none">&#8592;</button><span class="pag-info" id="sk-pg"></span><button class="pag-btn" id="sk-next" style="display:none">&#8594;</button></div></div>
+    <table class="sk" width="100%"><thead><tr><th>Skill</th><th>Status</th><th>Triggers</th><th>Trend</th><th>Time</th><th>Last</th></tr></thead>
+      <tbody id="skb"><tr><td colspan="6"><span class="ld">...</span></td></tr></tbody></table>
+  </section>
+
+  <section class="sec" id="hooks">
+    <div class="sh"><h2 class="st">Hooks</h2><div class="pag"><button class="pag-btn" id="hk-prev" style="display:none">&#8592;</button><span class="pag-info" id="hk-pg"></span><button class="pag-btn" id="hk-next" style="display:none">&#8594;</button></div></div>
+    <div id="hkl"><span class="ld">...</span></div>
+  </section>
+
+  <section class="sec" id="heat">
+    <div class="sh"><h2 class="st">Heatmap</h2></div>
+    <div style="display:flex;gap:24px;align-items:flex-start">
+      <div style="flex:1" id="hmw"><span class="ld">...</span></div>
+      <div id="hm-detail" style="width:280px;flex-shrink:0;border:1px solid var(--r);border-radius:4px;padding:16px;display:none">
+        <div id="hm-dt" style="font-family:'Poppins',sans-serif;font-size:14px;font-weight:500;margin-bottom:4px"></div>
+        <div id="hm-ds" style="font-size:11px;color:var(--i3);margin-bottom:12px"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          <div><div style="font-family:'Poppins',sans-serif;font-size:24px;line-height:1" id="hm-trig">0</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--i4);text-transform:uppercase;letter-spacing:.1em">triggers</div></div>
+          <div><div style="font-family:'Poppins',sans-serif;font-size:24px;line-height:1" id="hm-cost">$0</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--i4);text-transform:uppercase;letter-spacing:.1em">cost</div></div>
+          <div><div style="font-family:'Poppins',sans-serif;font-size:24px;line-height:1" id="hm-err">0</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--i4);text-transform:uppercase;letter-spacing:.1em">errors</div></div>
+          <div><div style="font-family:'Poppins',sans-serif;font-size:24px;line-height:1" id="hm-sk">0</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--i4);text-transform:uppercase;letter-spacing:.1em">skills</div></div>
+        </div>
+        <div id="hm-skills-list" style="font-size:11px;color:var(--i2)"></div>
+        <div id="hm-hooks-list" style="font-size:11px;color:var(--i2);margin-top:6px"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="sess">
+    <div class="sh"><h2 class="st">Sessions</h2></div>
+    <div id="sel"><span class="ld">...</span></div>
+  </section>
+
+  <footer class="footer"><span>OpenLog v0.1</span></footer>
+</main>
+
+<script>
+const F=n=>n==null||isNaN(n)?'—':Number(n).toLocaleString('en-US');
+const $=n=>n==null||isNaN(n)?'—':'$'+Number(n).toFixed(2);
+const E=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const R=ts=>{if(!ts)return'—';const d=Math.max(0,Math.floor((Date.now()-new Date(ts).getTime())/1000));return d<60?d+'s':d<3600?Math.floor(d/60)+'m':d<86400?Math.floor(d/3600)+'h':Math.floor(d/86400)+'d'};
+const A=async p=>{const r=await fetch(p);if(!r.ok)throw new Error(r.status);return r.json()};
+const APP={cli:'Terminal','sdk-ts':'T3 Code','claude-vscode':'VS Code'};
+
+// Scroll spy
+const nav=document.querySelectorAll('.si[data-s]'),ml=document.getElementById('m');
+ml.addEventListener('scroll',()=>{let c='dash';document.querySelectorAll('.sec').forEach(s=>{if(ml.scrollTop>=s.offsetTop-120)c=s.id});nav.forEach(n=>n.classList.toggle('on',n.dataset.s===c))});
+nav.forEach(n=>n.addEventListener('click',e=>{e.preventDefault();const t=document.getElementById(n.dataset.s);if(t)ml.scrollTo({top:t.offsetTop,behavior:'smooth'})}));
+
+// ── Sync Timer + Auto-sync Log ──
+let lastSyncTs=0;
+async function updateSyncBar(){
+  try{
+    const[l,h]=await Promise.all([A('/api/limits'),A('/api/limits-history').catch(()=>({entries:[]}))]);
+    if(l.available){
+      lastSyncTs=l.ts*1000;const age=Math.floor((Date.now()-lastSyncTs)/1000);const next=Math.max(0,300-age);
+      document.getElementById('sync-dot').className='sync-dot'+(next<=0?' active':(age<300?' active':''));
+      document.getElementById('sync-text').textContent=next<=0?'Syncing...':(`Last sync: ${age<60?age+'s':Math.floor(age/60)+'m'} ago · Next in ${next<60?next+'s':Math.floor(next/60)+'m '+next%60+'s'}`);
+    }else{document.getElementById('sync-text').textContent='No sync data yet'}
+    // Show recent auto-sync history in the log panel (last 8)
+    const log=document.getElementById('sync-log');
+    const recent=(h.entries||[]).slice(-8);
+    if(recent.length&&log.innerHTML===''){
+      log.style.display='block';
+      log.innerHTML=recent.map(e=>{
+        const dt=new Date((e.ts||0)*1000);
+        const t=dt.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        const pct=e.limits?.five_hour?.pct;
+        const ok=e.success&&pct!=null;
+        const color=ok?'#2E7D32':'#C0392B';
+        return`<div style="padding:2px 0;color:${color}">${t} ${ok?'Auto-sync: '+pct+'% session ('+Math.round(e.elapsed_ms/1000)+'s)':'Sync failed ('+Math.round(e.elapsed_ms/1000)+'s)'}</div>`;
+      }).join('');
+      log.scrollTop=log.scrollHeight;
+    }
+  }catch(e){}}
+
+// ── Usage ──
+async function loadUsage(){
+  try{
+    const[u,l]=await Promise.all([A('/api/usage'),A('/api/limits').catch(()=>({available:false}))]);
+    const cost=u.totalCost??0,cb=u.costBreakdown||{};
+    let pct,wpct=null,src,resetStr='',weekStr='',burnRate='';
+    if(l.available&&l.five_hour?.pct!=null){
+      pct=l.five_hour.pct;wpct=l.seven_day?.pct??null;src=l.stale?'stale':'live';
+      if(l.five_hour.resets_at){const mn=Math.max(0,Math.round((l.five_hour.resets_at*1000-Date.now())/60000));resetStr=`Resets in ${Math.floor(mn/60)}h ${mn%60}m`}
+      if(wpct!=null){let wr='';if(l.seven_day?.resets_at){const mn=Math.max(0,Math.round((l.seven_day.resets_at*1000-Date.now())/60000));wr=mn<60?` · resets ${mn}m`:(mn<1440?` · resets ${Math.floor(mn/60)}h`:` · resets ${Math.floor(mn/1440)}d`)}weekStr=`<div class="uwk">Weekly: <strong>${wpct.toFixed(1)}%</strong>${wr}</div>`}
+    }else{pct=cost/(u.budget||227)*100;src='est.'}
+    // Burn rate forecast (must compute before template)
+    if(l.available&&l.five_hour?.resets_at&&pct>0){
+      const minsLeft=Math.max(0,Math.round((l.five_hour.resets_at*1000-Date.now())/60000));
+      const minsUsed=300-minsLeft;
+      if(minsUsed>5){
+        const pctPerMin=pct/minsUsed;
+        const pctPerHour=Math.round(pctPerMin*60*10)/10;
+        const minsTo100=pct<100?Math.round((100-pct)/pctPerMin):0;
+        burnRate=`<div style="font-family:'Poppins',sans-serif;font-size:44px;font-weight:400;letter-spacing:-1px;line-height:1;margin-top:8px">${pctPerHour}%/hr</div><div style="font-size:12px;color:var(--i3);margin-top:4px">${pct>=100?'Over limit':(minsTo100<minsLeft?'Hits 100% in ~'+minsTo100+'m':'Won\'t hit limit')}</div>`;
+      }
+    }
+    const c=pct>90?'var(--neg)':pct>75?'var(--warn)':'var(--ink)';
+    // Left: cost + resets
+    document.getElementById('ul').innerHTML=`<div class="ub">${$(cost)}</div><div class="ul">spent this session</div>${resetStr?`<div style="font-family:'Poppins',sans-serif;font-size:44px;font-weight:400;letter-spacing:-1px;line-height:1;margin-top:8px">${resetStr}</div>`:''}${weekStr}<div class="usc" style="color:${src==='live'?'var(--pos)':'var(--i4)'}">${src==='live'?'Auto-synced':'Estimated'}</div>`;
+    // Right: percentage + burn rate
+    document.getElementById('ur').innerHTML=`<div class="ub" style="color:${c}">${pct.toFixed(1)}%</div><div class="ul">session usage (${src})</div><div class="ubt"><div class="ubf${pct>100?' ov':''}" style="width:${Math.min(100,pct)}%"></div></div>${burnRate}`;
+    // Gauge row (above stats)
+    let gl,gc,gd;if(pct<50){gc='var(--pos)';gl='Chill';gd='Plenty left'}else if(pct<75){gc='var(--warn)';gl='Steady';gd='Normal pace'}else if(pct<90){gc='var(--warn)';gl='Hot';gd='Slow down'}else{gc='var(--neg)';gl='Critical';gd=pct>=100?'Exhausted':'Near limit'}
+    document.getElementById('gauge-row').innerHTML=`<div class="ga"><div class="gd" style="background:${gc}"></div><div><div class="gt">${gl}</div><div class="gdt">${gd}</div></div></div>`;
+    // Cost breakdown row (below stats)
+    const items=[{l:'Input',t:cb.input?.tokens,c:cb.input?.cost},{l:'Output',t:cb.output?.tokens,c:cb.output?.cost},{l:'Cache Create',t:cb.cacheCreation?.tokens,c:cb.cacheCreation?.cost},{l:'Cache Read',t:cb.cacheRead?.tokens,c:cb.cacheRead?.cost}];
+    document.getElementById('cost-row').innerHTML=items.map(i=>`<div class="cc"><div class="cl">${i.l}</div><div class="ct">${F(i.t)} tok</div><div class="cv">${$(i.c)}</div></div>`).join('');
+  }catch(e){document.getElementById('ul').innerHTML='<span class="ld" style="color:var(--neg)">Error: '+E(e.message)+'</span>';console.error('loadUsage error:',e)}
+}
+
+// ── Stats ──
+async function loadStats(){try{const d=await A('/api/stats');const a=d.avgResponseMs||0;document.getElementById('stats').innerHTML=[{l:'Skills',v:F(d.totalSkills)},{l:'Triggers',v:F(d.totalTriggers)},{l:'Avg Response',v:a>=1000?(a/1000).toFixed(1)+'s':a+'ms'},{l:'Errors',v:F(d.errors)}].map(s=>`<div class="si2"><div class="si2l">${s.l}</div><div class="si2v">${s.v}</div></div>`).join('')}catch(e){}}
+
+// ── History ──
+let HD=[],HI=0,HM=[];
+function gm(d){const m={};d.forEach(x=>{const k=x.date.slice(0,7);(m[k]=m[k]||[]).push(x)});return Object.keys(m).sort().map(k=>({k,d:m[k]}))}
+async function loadHist(){try{const d=await A('/api/history');HD=d.days||[];HM=gm(HD);HI=HM.length-1;rm()}catch(e){document.getElementById('hml').textContent='Failed'}}
+function rm(){
+  if(!HM.length)return;const m=HM[HI],mn=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const[y,mo]=m.k.split('-');document.getElementById('hml').textContent=mn[+mo-1]+' '+y;
+  document.getElementById('hp').disabled=HI===0;document.getElementById('hn').disabled=HI===HM.length-1;
+  dg(m.d);
+  const tc=m.d.reduce((a,x)=>a+x.cost,0),ac=m.d.filter(x=>x.cost>0),av=ac.length?tc/ac.length:0,pk=m.d.reduce((a,x)=>x.cost>a.cost?x:a,{cost:0,date:''});
+  document.getElementById('hss').innerHTML=`<div class="hsi"><div class="hsl">Month</div><div class="hsv">${$(tc)}</div></div><div class="hsi"><div class="hsl">Avg/Day</div><div class="hsv">${$(av)}</div></div><div class="hsi"><div class="hsl">Peak</div><div class="hsv">${pk.date?pk.date.slice(8)+' ('+$(pk.cost)+')':'—'}</div></div><div class="hsi"><div class="hsl">Active</div><div class="hsv">${ac.length}/${m.d.length}</div></div>`;
+}
+document.getElementById('hp').onclick=()=>{if(HI>0){HI--;rm()}};
+document.getElementById('hn').onclick=()=>{if(HI<HM.length-1){HI++;rm()}};
+function dg(days){
+  const c=document.getElementById('hc'),dp=window.devicePixelRatio||1,rc=c.parentElement.getBoundingClientRect();
+  c.width=rc.width*dp;c.height=220*dp;c.style.width=rc.width+'px';c.style.height='220px';
+  const x=c.getContext('2d');x.scale(dp,dp);const W=rc.width,H=220,p={t:16,r:60,b:30,l:44},gW=W-p.l-p.r,gH=H-p.t-p.b;
+  x.clearRect(0,0,W,H);const mx=Math.max(250,...days.map(d=>d.cost))*1.12,xs=days.length>1?gW/(days.length-1):gW;
+  const X=i=>p.l+(days.length>1?i*xs:gW/2),Y=v=>p.t+gH-(v/mx)*gH;
+  x.strokeStyle='#F0F0F0';x.lineWidth=1;for(let i=0;i<=4;i++){const v=(mx/4)*i,y=Y(v);x.beginPath();x.moveTo(p.l,y);x.lineTo(W-p.r,y);x.stroke();x.fillStyle='#BBB';x.font='9px "DM Mono",monospace';x.textAlign='right';x.fillText('$'+Math.round(v),p.l-6,y+3)}
+  const bY=Y(227);x.strokeStyle='#D4775C';x.setLineDash([3,3]);x.beginPath();x.moveTo(p.l,bY);x.lineTo(W-p.r,bY);x.stroke();x.setLineDash([]);x.fillStyle='#D4775C';x.font='9px "DM Mono",monospace';x.textAlign='left';x.fillText('~$227',W-p.r+4,bY+3);
+  if(days.length>1){x.beginPath();x.moveTo(X(0),Y(days[0].cost));for(let i=1;i<days.length;i++){const c1=X(i-1)+xs*.4,c2=X(i)-xs*.4;x.bezierCurveTo(c1,Y(days[i-1].cost),c2,Y(days[i].cost),X(i),Y(days[i].cost))}x.lineTo(X(days.length-1),Y(0));x.lineTo(X(0),Y(0));x.closePath();x.fillStyle='rgba(212,119,92,0.06)';x.fill()}
+  if(days.length>1){x.beginPath();x.moveTo(X(0),Y(days[0].cost));for(let i=1;i<days.length;i++){const c1=X(i-1)+xs*.4,c2=X(i)-xs*.4;x.bezierCurveTo(c1,Y(days[i-1].cost),c2,Y(days[i].cost),X(i),Y(days[i].cost))}x.strokeStyle='#D4775C';x.lineWidth=1.5;x.stroke()}
+  days.forEach((d,i)=>{x.beginPath();x.arc(X(i),Y(d.cost),2.5,0,Math.PI*2);x.fillStyle=d.cost>227?'#C0392B':'#D4775C';x.fill()});
+  x.fillStyle='#BBB';x.font='9px "DM Mono",monospace';x.textAlign='center';days.forEach((d,i)=>{const dy=+d.date.slice(8);if(dy===1||dy%5===0||i===days.length-1)x.fillText(dy+'',X(i),H-p.b+16)});
+  const tip=document.getElementById('htt');
+  c.onmousemove=e=>{const br=c.getBoundingClientRect(),mx2=e.clientX-br.left;let ci=-1,cd=1e9;days.forEach((d,i)=>{const dt=Math.abs(mx2-X(i));if(dt<cd){cd=dt;ci=i}});if(ci>=0&&cd<25){const d=days[ci];tip.style.display='block';tip.style.left=Math.min(X(ci)+8,W-140)+'px';tip.style.top=(Y(d.cost)-40)+'px';tip.innerHTML=`${d.date}<br>${$(d.cost)} · ${F(d.triggers)} triggers`}else tip.style.display='none'};
+  c.onmouseleave=()=>{tip.style.display='none'};
+}
+
+// ── Activity (skills + hooks only, errors limited) ──
+async function loadAct(){try{
+  const[hm,fd]=await Promise.all([A('/api/heatmap'),A('/api/activity')]);
+  if(hm.days&&hm.data){const t=hm.data.map(r=>r.reduce((a,b)=>a+b,0)),mx=Math.max(1,...t);document.getElementById('bch').innerHTML=hm.days.map((d,i)=>`<div class="bg" title="${d}: ${F(t[i])} triggers"><div class="bs"><div class="b" style="height:${Math.max(1,t[i]/mx*100)}%"></div></div><div class="bl">${d}</div><div style="font-family:'DM Mono',monospace;font-size:8px;color:var(--i3);margin-top:1px">${F(t[i])}</div></div>`).join('')}
+  const fl=document.getElementById('feed');
+  if(Array.isArray(fd)&&fd.length){
+    // Prioritize skills/hooks, limit api_errors to 3
+    const skills=fd.filter(f=>f.type==='skill');
+    const hooks=fd.filter(f=>f.type==='hook');
+    const errors=fd.filter(f=>f.type==='error').slice(0,3);
+    const sorted=[...skills,...hooks,...errors].sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp)).slice(0,15);
+    fl.innerHTML=sorted.map(f=>`<div class="fi"><div class="fd ${f.type}"></div><div><div class="fn">${E(f.name)}</div><div class="fdt">${E(f.detail).slice(0,80)}</div></div><div class="ft">${R(f.timestamp)}</div></div>`).join('');
+  }else fl.innerHTML='<span class="ld">No activity</span>';
+}catch(e){}}
+
+// ── Skills (all rows, with expand trend) ──
+const DAYS_SHORT=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+async function loadSk(){try{const d=await A('/api/skills'),el=document.getElementById('skb');
+  document.getElementById('sk-pg').textContent='';
+  document.getElementById('sk-prev').style.display='none';
+  document.getElementById('sk-next').style.display='none';
+  if(!d.length){el.innerHTML='<tr><td colspan="6" class="ld">None</td></tr>';return}
+  const rows=[];
+  d.forEach((s,idx)=>{
+    const mx=Math.max(1,...s.trend),sp=s.trend.map(v=>`<div class="spb" style="height:${Math.max(1,v/mx*16)}px"></div>`).join(''),av=s.avgTimeMs>=1000?(s.avgTimeMs/1000).toFixed(1)+'s':(s.avgTimeMs||0)+'ms';
+    const trendMax=Math.max(1,...s.trend);
+    const trendBars=s.trend.map((v,ti)=>`<div class="exp-bar-g"><div class="exp-bar" style="height:${Math.max(2,v/trendMax*44)}px"></div><div class="exp-bar-l">${DAYS_SHORT[ti]||''}</div></div>`).join('');
+    rows.push(`<tr data-sk-idx="${idx}"><td><div class="skn"><span class="exp-arrow" data-sk="${idx}">&#9658;</span><div class="skd"></div>${E(s.name)}</div></td><td><span class="sb ${s.status}">${s.status}</span></td><td><span class="serif" style="font-size:14px">${F(s.triggers)}</span></td><td><div class="sp">${sp}</div></td><td><span class="mono" style="font-size:10px;color:var(--i2)">${av}</span></td><td><span style="font-size:11px;color:var(--i3)">${R(s.lastUsed)}</span></td></tr>`);
+    rows.push(`<tr class="exp-row" id="sk-exp-${idx}" style="display:none"><td colspan="6"><div class="exp-inner"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--i4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.1em">7-day trigger trend</div><div class="exp-bars">${trendBars}</div></div></td></tr>`);
+  });
+  el.innerHTML=rows.join('');
+  el.querySelectorAll('.exp-arrow[data-sk]').forEach(btn=>{
+    btn.addEventListener('click',function(){
+      const idx=this.dataset.sk;const row=document.getElementById('sk-exp-'+idx);
+      const open=row.style.display!=='none';
+      row.style.display=open?'none':'table-row';
+      this.classList.toggle('open',!open);
+    });
+  });
+}catch(e){}}
+
+// ── Hooks (all, with expand day-chart) ──
+let hkData=[];
+async function loadHk(){try{hkData=await A('/api/hooks');renderHk()}catch(e){}}
+function renderHk(){
+  const el=document.getElementById('hkl');
+  document.getElementById('hk-prev').style.display='none';
+  document.getElementById('hk-next').style.display='none';
+  document.getElementById('hk-pg').textContent='';
+  if(!hkData.length){el.innerHTML='<span class="ld">None</span>';return}
+  const html=hkData.map((h,idx)=>{
+    // Build a 7-bar placeholder from fires count (evenly distributed as a demo when no daily data)
+    const daily=Array.isArray(h.daily)&&h.daily.some(v=>v>0)?h.daily:Array.from({length:7},()=>0);
+    const dm=Math.max(1,...daily);
+    const dbars=daily.map((v,i)=>`<div class="hk-exp-bar-g"><div class="hk-exp-bar" style="height:${Math.max(2,v/dm*42)}px"></div><div class="hk-exp-bar-l">${DAYS_SHORT[i]||''}</div></div>`).join('');
+    return`<div class="hi" style="cursor:default"><div class="he">${E(h.event)}</div><div><div class="hn"><span class="exp-arrow" data-hk="${idx}">&#9658;</span>${E(h.name)}</div><div class="hd">${E(h.command)}</div></div><div><div class="hcn">${F(h.fires)}</div><div class="hcl">fires</div></div></div><div id="hk-exp-${idx}" style="display:none;border-bottom:1px solid var(--r2)"><div class="hk-exp-inner"><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--i4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.1em">fires per day (7-day)</div><div class="hk-exp-bars">${dbars}</div></div></div>`;
+  }).join('');
+  el.innerHTML=html;
+  el.querySelectorAll('.exp-arrow[data-hk]').forEach(btn=>{
+    btn.addEventListener('click',function(e){
+      e.stopPropagation();
+      const idx=this.dataset.hk;const row=document.getElementById('hk-exp-'+idx);
+      const open=row.style.display!=='none';
+      row.style.display=open?'none':'block';
+      this.classList.toggle('open',!open);
+    });
+  });
+}
+
+// ── Heatmap (bigger cells, clickable detail) ──
+async function loadHm(){try{const d=await A('/api/heatmap'),el=document.getElementById('hmw');if(!d.data)return;
+  const all=d.data.flat().filter(v=>v>0),mx=all.length?Math.max(...all):1;
+  const lv=v=>{if(!v)return 0;const p=v/mx;return p<.2?1:p<.4?2:p<.6?3:p<.8?4:5};
+  el.innerHTML=`<div class="hmi"><div class="hmds">${d.days.map(dy=>`<div class="hmdl">${dy}</div>`).join('')}</div><div style="flex:1"><div class="hmg">${d.data.map((r,ri)=>`<div class="hmr">${r.map((v,ci)=>`<div class="hmc l${lv(v)}" data-ri="${ri}" data-ci="${ci}" data-v="${v}" title="${d.days[ri]} ${ci}:00 — ${v} triggers"></div>`).join('')}</div>`).join('')}</div><div class="hmh">${Array.from({length:24},(_,i)=>`<div class="hmhl">${i%3===0?i:''}</div>`).join('')}</div></div></div>`;
+  el.querySelectorAll('.hmc').forEach(cell=>{
+    cell.addEventListener('click',async function(){
+      const ri=+this.dataset.ri,ci=+this.dataset.ci,v=+this.dataset.v;
+      const date=d.dates?.[ri]||'';
+      const det=document.getElementById('hm-detail');
+      const hr=ci+':00–'+(ci+1)+':00';
+      document.getElementById('hm-dt').textContent=(d.days[ri]||'')+' '+hr;
+      document.getElementById('hm-ds').textContent=date?'Loading...':'No date';
+      document.getElementById('hm-trig').textContent=v;
+      document.getElementById('hm-cost').textContent='...';
+      document.getElementById('hm-err').textContent='...';
+      document.getElementById('hm-sk').textContent='...';
+      document.getElementById('hm-skills-list').innerHTML='';
+      document.getElementById('hm-hooks-list').innerHTML='';
+      det.style.display='block';
+      el.querySelectorAll('.hmc.sel').forEach(c=>c.classList.remove('sel'));
+      this.classList.add('sel');
+      if(date){
+        try{
+          const detail=await A('/api/heatmap-detail?date='+date+'&hour='+ci);
+          document.getElementById('hm-trig').textContent=F(detail.triggers);
+          document.getElementById('hm-cost').textContent=$(detail.cost);
+          document.getElementById('hm-err').textContent=F(detail.errors);
+          document.getElementById('hm-sk').textContent=detail.skillCount+'/'+detail.hookCount;
+          document.getElementById('hm-ds').textContent=detail.triggers?'Activity this hour':'No activity';
+          const sk=Object.entries(detail.skills||{});
+          if(sk.length)document.getElementById('hm-skills-list').innerHTML='<div style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--i4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px">Skills</div>'+sk.map(([n,c])=>`<div style="display:flex;justify-content:space-between"><span>${E(n)}</span><span style="color:var(--s)">${c}x</span></div>`).join('');
+          const hk=Object.entries(detail.hooks||{}).slice(0,8);
+          if(hk.length)document.getElementById('hm-hooks-list').innerHTML='<div style="font-family:\'DM Mono\',monospace;font-size:8px;color:var(--i4);text-transform:uppercase;letter-spacing:.1em;margin-bottom:3px;margin-top:6px">Hooks</div>'+hk.map(([n,c])=>`<div style="display:flex;justify-content:space-between"><span>${E(n).slice(0,25)}</span><span style="color:var(--i3)">${c}x</span></div>`).join('');
+        }catch(e){document.getElementById('hm-ds').textContent='Failed to load detail'}
+      }
+    });
+  });
+}catch(e){}}
+
+// ── Limits History Bar Chart ──
+async function loadLimitsHistory(){
+  try{
+    const d=await A('/api/limits-history');
+    const entries=d.entries||[];
+    const bw=document.getElementById('lhbw');
+    if(!entries.length){bw.innerHTML='<span class="ld" style="font-size:10px">No sync history yet</span>';return}
+    // Filter to current month
+    const now=new Date(),curYM=now.getFullYear()+'-'+(String(now.getMonth()+1).padStart(2,'0'));
+    const month=entries.filter(e=>{
+      if(!e.ts)return false;
+      const dt=new Date(typeof e.ts==='number'?e.ts*1000:e.ts);
+      return !isNaN(dt.getTime())&&(dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0'))===curYM;
+    });
+    const src=month.length?month:entries; // fallback to all if none in month
+    const pcts=src.map(e=>{
+      const lim=e.limits;
+      return(lim?.five_hour?.pct??lim?.session?.pct??null);
+    });
+    const valid=pcts.filter(p=>p!=null);
+    if(!valid.length){bw.innerHTML='<span class="ld" style="font-size:10px">No pct data in entries</span>';return}
+    const mx=Math.max(1,...valid);
+    bw.innerHTML=src.map((e,i)=>{
+      const pct=pcts[i];if(pct==null)return'';
+      const h=Math.max(4,pct/Math.max(mx,100)*72);
+      const over=pct>=90;
+      const dt=new Date(typeof e.ts==='number'?e.ts*1000:e.ts);
+      const lbl=isNaN(dt.getTime())?'':dt.getHours().toString().padStart(2,'0')+':'+dt.getMinutes().toString().padStart(2,'0');
+      // Only show label every ~6 bars to avoid clutter
+      const showLbl=i%6===0||i===src.length-1;
+      return`<div class="lhb${over?' ov':''}" style="height:${h}px" title="${pct.toFixed(1)}% at ${lbl}${over?' ⚠ over 90%':''}">${showLbl?`<span class="lhbt">${lbl}</span>`:''}</div>`;
+    }).join('');
+  }catch(e){const bw=document.getElementById('lhbw');if(bw)bw.innerHTML='<span class="ld" style="font-size:10px">—</span>';}
+}
+
+// ── Sessions (with app badge) ──
+async function loadSe(){try{const d=await A('/api/sessions'),el=document.getElementById('sel');
+  if(!d.length){el.innerHTML='<span class="ld">None</span>';return}
+  el.innerHTML=d.map(s=>{
+    const ep=s.entrypoint||'cli';
+    const app=APP[ep]||ep;
+    const cls=ep==='cli'?'cli':ep==='sdk-ts'?'ide':'vsc';
+    return`<div class="sei"><div><div class="set"><span class="sep">PID ${s.pid}</span><span class="sea ${cls}">${app}</span><span class="sek">${s.kind||'—'}</span></div><div class="sed">${E(s.cwd)}</div></div><div class="setm">${R(s.startedAt?new Date(s.startedAt).toISOString():null)}</div></div>`;
+  }).join('')}catch(e){}}
+
+// ── Sync Now button ──
+function slog(msg,color){
+  const el=document.getElementById('sync-log');
+  el.style.display='block';
+  const t=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  el.innerHTML+=`<div style="padding:2px 0;${color?'color:'+color:''}">${t} ${msg}</div>`;
+  el.scrollTop=el.scrollHeight;
+}
+document.getElementById('sync-btn').onclick=async()=>{
+  const btn=document.getElementById('sync-btn');
+  const st=document.getElementById('sync-text');
+  const log=document.getElementById('sync-log');
+  log.innerHTML='';log.style.display='block';
+  btn.disabled=true;btn.textContent='Syncing...';
+  const t0=Date.now();
+  slog('Starting sync via tmux (~18s)...');
+  st.textContent='Syncing...';
+  try{
+    const r=await fetch('/api/sync-limits',{method:'POST'});
+    const d=await r.json();
+    const elapsed=Date.now()-t0;
+    slog(`Server responded in ${elapsed}ms (${(elapsed/1000).toFixed(1)}s)`);
+    if(d.limits_captured){
+      slog(`Limits captured: session=${d.limits?.five_hour?.pct}% weekly=${d.limits?.seven_day?.pct}%`,'#2E7D32');
+      slog(`Elapsed: ${d.elapsed_ms}ms`);
+      st.textContent='Synced! Refreshing...';
+      await loadUsage();await updateSyncBar();
+      slog('Dashboard updated','#2E7D32');
+    }else{
+      slog('No limits captured — Claude may have been rate limited','#C0392B');
+      if(d.error)slog('Error: '+d.error,'#C0392B');
+      st.textContent='Sync done but no limits captured';
+    }
+  }catch(e){slog('Fetch failed: '+e.message,'#C0392B');st.textContent='Sync failed'}
+  btn.disabled=false;btn.textContent='Sync Now';
+};
+
+// ── Init ──
+async function init(){
+  await Promise.allSettled([loadUsage(),loadStats(),loadAct(),loadSk(),loadHk(),loadHm(),loadSe(),updateSyncBar(),loadLimitsHistory()]);
+  // History is HEAVY (1.15GB scan) — only load when user scrolls to it
+  let histLoaded=false;
+  const histSection=document.getElementById('hist');
+  const histObserver=new IntersectionObserver((entries)=>{
+    if(entries[0].isIntersecting&&!histLoaded){histLoaded=true;loadHist();histObserver.disconnect()}
+  },{root:document.getElementById('m'),threshold:0.1});
+  histObserver.observe(histSection);
+}
+init();
+// Relaxed intervals to reduce CPU/IO load
+setInterval(loadUsage,30000);        // was 10s, now 30s
+setInterval(()=>{loadAct();updateSyncBar()},60000);  // was 30s, now 60s
+setInterval(()=>{loadStats();loadSk();loadHk();loadSe();loadHm()},120000); // was 60s, now 120s
+// No auto-refresh for history — too heavy. User scrolls to it to load once.
+window.addEventListener('resize',()=>{if(HM.length)rm()});
+</script>
+</body>
+</html>
