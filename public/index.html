@@ -338,7 +338,8 @@ async function loadUsage(){
     const cost=u.totalCost??0,cb=u.costBreakdown||{};
     let pct,wpct=null,src,resetStr='',weekStr='',burnRate='';
     if(l.available&&l.five_hour?.pct!=null){
-      pct=l.five_hour.pct;wpct=l.seven_day?.pct??null;src=l.stale?'stale':'live';
+      pct=l.five_hour.pct;wpct=l.seven_day?.pct??null;
+      src=l.rate_limited?'rate limited':(l.stale?'stale':'live');
       if(l.five_hour.resets_at){const mn=Math.max(0,Math.round((l.five_hour.resets_at*1000-Date.now())/60000));resetStr=`Resets in ${Math.floor(mn/60)}h ${mn%60}m`}
       if(wpct!=null){let wr='';if(l.seven_day?.resets_at){const mn=Math.max(0,Math.round((l.seven_day.resets_at*1000-Date.now())/60000));wr=mn<60?` · resets ${mn}m`:(mn<1440?` · resets ${Math.floor(mn/60)}h`:` · resets ${Math.floor(mn/1440)}d`)}weekStr=`<div class="uwk">Weekly: <strong>${wpct.toFixed(1)}%</strong>${wr}</div>`}
     }else{pct=cost/(u.budget||227)*100;src='est.'}
@@ -366,7 +367,12 @@ async function loadUsage(){
     // Right: percentage + burn rate
     document.getElementById('ur').innerHTML=`<div class="ub" style="color:${c}">${pct.toFixed(1)}%</div><div class="ul">session usage (${src})</div><div class="ubt"><div class="ubf${pct>100?' ov':''}" style="width:${Math.min(100,pct)}%"></div></div>${burnRate}`;
     // Gauge row (above stats)
-    let gl,gc,gd;if(pct<50){gc='var(--pos)';gl='Chill';gd='Plenty left'}else if(pct<75){gc='var(--warn)';gl='Steady';gd='Normal pace'}else if(pct<90){gc='var(--warn)';gl='Hot';gd='Slow down'}else{gc='var(--neg)';gl='Critical';gd=pct>=100?'Exhausted':'Near limit'}
+    let gl,gc,gd;
+    if(l.rate_limited||pct>=100){gc='var(--neg)';gl='Rate Limited';gd=resetStr||'Wait for session reset'}
+    else if(pct<50){gc='var(--pos)';gl='Chill';gd='Plenty left'}
+    else if(pct<75){gc='var(--warn)';gl='Steady';gd='Normal pace'}
+    else if(pct<90){gc='var(--warn)';gl='Hot';gd='Slow down'}
+    else{gc='var(--neg)';gl='Critical';gd='Near limit'}
     document.getElementById('gauge-row').innerHTML=`<div class="ga"><div class="gd" style="background:${gc}"></div><div><div class="gt">${gl}</div><div class="gdt">${gd}</div></div></div>`;
     // Cost breakdown row (below stats)
     const items=[{l:'Input',t:cb.input?.tokens,c:cb.input?.cost},{l:'Output',t:cb.output?.tokens,c:cb.output?.cost},{l:'Cache Create',t:cb.cacheCreation?.tokens,c:cb.cacheCreation?.cost},{l:'Cache Read',t:cb.cacheRead?.tokens,c:cb.cacheRead?.cost}];
@@ -576,7 +582,8 @@ document.getElementById('sync-btn').onclick=async()=>{
       const r=await fetch('/api/sync-limits',{method:'POST'});
       const d=await r.json();
       if(d.limits_captured){
-        st.textContent=`Synced: ${d.limits?.five_hour?.pct}% session`;
+        const rl=d.limits?.rate_limited;
+        st.textContent=rl?'Rate limited (100%) — waiting for reset':`Synced: ${d.limits?.five_hour?.pct}% session`;
         await loadUsage();await updateSyncBar();
         success=true;break;
       }

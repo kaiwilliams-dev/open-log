@@ -979,7 +979,7 @@ async function readLimits() {
     if (!(await file.exists())) return { available: false, message: "No limits data yet. Use Claude Code to generate data." };
     const data = await file.json() as Record<string, unknown>;
     const age = Math.floor(Date.now() / 1000) - ((data.ts as number) ?? 0);
-    return { available: true, stale: age > 300, age_seconds: age, ...data };
+    return { available: true, stale: age > 300, age_seconds: age, rate_limited: !!(data as any).rate_limited, ...data };
   } catch {
     return { available: false, message: "Could not read limits file" };
   }
