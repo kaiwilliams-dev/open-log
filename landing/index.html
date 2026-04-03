@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OpenLog — See what Claude Code won't show you</title>
-  <meta name="description" content="One developer burned $13,286 in Claude Code compute in a single month on a $100 plan. The subsidy won't last. OpenLog shows you where your compute goes so you can optimize before it's too late.">
+  <title>OpenLog — The dashboard Claude Code should have shipped with</title>
+  <meta name="description" content="$13,286 in compute. $100 plan. One month. Anthropic's subsidy won't last — OpenLog shows you exactly where your Claude Code compute goes so you can optimize before the limits tighten.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
@@ -135,15 +135,15 @@
 </nav>
 
 <section class="hero">
-  <div class="hero-badge">open source / local first / free</div>
-  <h1>I burned <span>$13,286</span> in compute last month. My plan costs $100.</h1>
-  <p>Anthropic is subsidizing your Claude Code plan at 100x+ the sticker price. That won't last. When the subsidy pulls back, the developers who optimized their usage will keep building. The rest will hit a wall. OpenLog shows you exactly where your compute goes so you can optimize now.</p>
+  <div class="hero-badge">open source / runs locally / free forever</div>
+  <h1><span>$13,286</span> in compute. $100 plan. One month.</h1>
+  <p>That's real data from a real Claude Code Max subscriber. Anthropic is subsidizing your plan at 133x the price you pay. They've already started tightening limits. The developers who understand their usage now will keep shipping when the subsidy pulls back. The rest will hit a wall and not know why.</p>
   <div class="hero-actions">
     <a href="https://github.com/kaiwilliams-dev/open-log" class="btn-primary" target="_blank">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg>
-      View on GitHub
+      Get OpenLog on GitHub
     </a>
-    <a href="#how" class="btn-secondary">60-second setup &darr;</a>
+    <a href="#how" class="btn-secondary">Takes 60 seconds to set up &darr;</a>
   </div>
   <div class="install-block">
     <div class="install-cmd"><span>$</span> git clone https://github.com/kaiwilliams-dev/open-log.git</div>
@@ -156,61 +156,61 @@
 </div>
 
 <div class="stats-bar">
-  <div class="stat-item"><div class="stat-num">$13,286</div><div class="stat-label">compute burned in one month</div></div>
-  <div class="stat-item"><div class="stat-num">133x</div><div class="stat-label">subsidy on a $100 plan</div></div>
-  <div class="stat-item"><div class="stat-num">0</div><div class="stat-label">visibility until now</div></div>
+  <div class="stat-item"><div class="stat-num">$13,286</div><div class="stat-label">actual compute used in March</div></div>
+  <div class="stat-item"><div class="stat-num">133x</div><div class="stat-label">what Anthropic absorbs for you</div></div>
+  <div class="stat-item"><div class="stat-num">0</div><div class="stat-label">tools that showed this before</div></div>
 </div>
 
 <section class="problem">
-  <h2>The subsidy won't last forever</h2>
-  <p class="problem-text">Anthropic is already tightening. Peak hour throttling started March 26. Session limits are getting shorter. The developers who understand their usage patterns and optimize now will be the ones who keep shipping when the subsidy pulls back. Everyone else will wonder why they're suddenly rate limited after 20 minutes.</p>
+  <h2>The tightening has already started</h2>
+  <p class="problem-text">On March 26, Anthropic announced peak-hour throttling for all tiers. Session limits now burn faster during business hours. Weekly limits stay the same, but the window to use them is shrinking. This is the first move. There will be more.</p>
   <div class="problem-quote">
-    <p>"We're adjusting our 5 hour session limits for free/Pro/Max subs during peak hours. During weekdays between 5am-11am PT / 1pm-7pm GMT, you'll move through your 5-hour session limits faster than before."</p>
-    <cite>Thariq @ Anthropic &mdash; Mar 26, 2026</cite>
+    <p>"We're adjusting our 5 hour session limits for free/Pro/Max subs during peak hours. During weekdays between 5am&ndash;11am PT / 1pm&ndash;7pm GMT, you'll move through your 5-hour session limits faster than before."</p>
+    <cite>Thariq, Anthropic &mdash; Mar 26, 2026</cite>
   </div>
 </section>
 
 <section class="features" id="features">
   <div class="features-header">
-    <h2>Everything Claude Code doesn't show you</h2>
-    <p>No cloud. No accounts. Your local data, finally visible.</p>
+    <h2>The observability layer Claude Code is missing</h2>
+    <p>Your data already exists locally. OpenLog reads it and makes it useful.</p>
   </div>
   <div class="features-grid">
     <div class="feature">
-      <h3>Exact usage percentage</h3>
-      <p>Session and weekly limits synced directly from Anthropic. Not estimated — the real numbers from the API response headers.</p>
+      <h3>Real usage percentage</h3>
+      <p>Not estimated. Synced directly from Anthropic's API response headers. Session and weekly limits, exact to the percent.</p>
     </div>
     <div class="feature">
-      <h3>Token cost breakdown</h3>
-      <p>See the dollar cost of every session. Input, output, cache creation, cache read — broken down so you know what's expensive.</p>
+      <h3>Dollar cost per session</h3>
+      <p>Input tokens, output tokens, cache creation, cache read — each priced out. Know which operations cost the most.</p>
     </div>
     <div class="feature">
-      <h3>Burn rate + forecast</h3>
-      <p>Your current %/hour rate and when you'll hit 100%. Plus peak/off-peak detection so you know when to do heavy work.</p>
+      <h3>Burn rate forecasting</h3>
+      <p>See your %/hour rate and a countdown to 100%. Know whether to keep pushing or save your budget for later.</p>
     </div>
     <div class="feature">
-      <h3>Skills analytics</h3>
-      <p>Which custom skills fire? How often? 7-day trends with expandable daily breakdowns. See what's actually being used.</p>
+      <h3>Skills tracking</h3>
+      <p>50 skills installed and no idea which ones fire? See trigger counts, 7-day trends, and daily breakdowns per skill.</p>
     </div>
     <div class="feature">
-      <h3>Hooks monitoring</h3>
-      <p>Track every hook invocation — PreToolUse, PostToolUse, Stop, SessionStart. See fire counts and daily patterns.</p>
+      <h3>Hook observability</h3>
+      <p>Every PreToolUse, PostToolUse, Stop, and SessionStart hook — tracked with fire counts, daily patterns, and command details.</p>
     </div>
     <div class="feature">
-      <h3>Activity heatmap</h3>
-      <p>7-day hourly grid. Click any cell to see triggers, costs, skills, and hooks for that specific hour.</p>
+      <h3>Hourly heatmap</h3>
+      <p>7-day grid showing exactly when you're active. Click any cell for triggers, costs, skills, and hooks in that hour.</p>
     </div>
     <div class="feature">
-      <h3>Usage history</h3>
-      <p>Monthly cost graphs with daily breakdown. Track spending over time, find your peak days, spot trends.</p>
+      <h3>Spending history</h3>
+      <p>Monthly cost graph with daily granularity. Spot the days that burned $500+ and figure out what drove them.</p>
     </div>
     <div class="feature">
-      <h3>Session monitoring</h3>
-      <p>See every running Claude instance — Terminal, T3 Code, VS Code — with PID, working directory, and uptime.</p>
+      <h3>Session awareness</h3>
+      <p>Every running Claude instance — Terminal, T3 Code, VS Code — listed with PID, project directory, and runtime.</p>
     </div>
     <div class="feature">
-      <h3>Peak hours awareness</h3>
-      <p>Knows when Anthropic throttles limits (weekdays 1-7pm GMT). Shows you when to shift heavy work for maximum output.</p>
+      <h3>Peak hour detection</h3>
+      <p>Anthropic throttles during 1&ndash;7pm GMT on weekdays. OpenLog shows you when to shift compute-heavy work to off-peak hours.</p>
     </div>
   </div>
 </section>
@@ -219,27 +219,27 @@
   <div class="gallery-grid">
     <div class="gallery-item">
       <img src="./screenshots/history.png" alt="Usage History">
-      <div class="gallery-item-label">Usage history with monthly cost graph and sync data</div>
+      <div class="gallery-item-label">March cost: $13,286. Daily peaks visible. Patterns you can act on.</div>
     </div>
     <div class="gallery-item">
       <img src="./screenshots/skills.png" alt="Skills Analytics">
-      <div class="gallery-item-label">Skills with trigger counts, status, and 7-day trends</div>
+      <div class="gallery-item-label">Every skill tracked — trigger counts, status, 7-day trend bars.</div>
     </div>
     <div class="gallery-item">
       <img src="./screenshots/heatmap.png" alt="Activity Heatmap">
-      <div class="gallery-item-label">Heatmap with click-to-detail panel showing hourly breakdown</div>
+      <div class="gallery-item-label">Click any hour. See exactly what fired, what it cost, and how many tokens.</div>
     </div>
     <div class="gallery-item">
       <img src="./screenshots/hooks.png" alt="Hooks Monitoring">
-      <div class="gallery-item-label">Hook monitoring with fire counts and event types</div>
+      <div class="gallery-item-label">PostToolUse:Read fired 7,800 times. Now you know.</div>
     </div>
   </div>
 </section>
 
 <section class="peak">
   <div class="peak-card">
-    <h3>Code smarter, not harder</h3>
-    <p>Anthropic confirmed session limits burn faster during peak hours. OpenLog tells you when you're in peak and when to shift heavy work.</p>
+    <h3>Same work. Different time. More output.</h3>
+    <p>Anthropic confirmed your session limits drain faster between 1&ndash;7pm GMT on weekdays. A task that costs 15% of your budget at 8am costs 25%+ at 3pm. OpenLog tells you which side of that line you're on.</p>
     <div class="peak-times">
       <div class="peak-time"><div class="label warn">Peak (limits burn faster)</div><div class="value">1pm &ndash; 7pm GMT</div></div>
       <div class="peak-time"><div class="label good">Off-peak (limits stretch)</div><div class="value">7pm &ndash; 1pm GMT</div></div>
@@ -248,12 +248,12 @@
 </section>
 
 <section class="how" id="how">
-  <h2>Running in 60 seconds</h2>
+  <h2>Set up in 60 seconds. Not a typo.</h2>
   <div class="step">
     <div class="step-num">1</div>
     <div>
       <h3>Clone and install</h3>
-      <p>Requires Bun and tmux. Both install in seconds via Homebrew.</p>
+      <p>Two dependencies: Bun and tmux. If you don't have them, one Homebrew command each.</p>
       <code><span>$</span> git clone https://github.com/kaiwilliams-dev/open-log.git && cd open-log && bun install</code>
     </div>
   </div>
@@ -261,37 +261,37 @@
     <div class="step-num">2</div>
     <div>
       <h3>Start the server</h3>
-      <p>Reads your local Claude Code data from ~/.claude/projects/. Everything stays on your machine.</p>
+      <p>Reads your local data from ~/.claude/projects/. No API keys. No accounts. Zero data leaves your machine.</p>
       <code><span>$</span> bun run start</code>
     </div>
   </div>
   <div class="step">
     <div class="step-num">3</div>
     <div>
-      <h3>Open and sync</h3>
-      <p>Click Sync Now to pull your exact usage percentage from Anthropic. Takes about 5 seconds.</p>
+      <h3>See your numbers</h3>
+      <p>Click Sync Now. Within 5 seconds you'll see your exact usage percentage, token costs, and burn rate. Done.</p>
       <code>http://localhost:7777</code>
     </div>
   </div>
 </section>
 
 <section class="pricing">
-  <h2>Free. Open source. Local.</h2>
-  <p>No cloud, no accounts, no tracking. Your data stays on your machine.</p>
+  <h2>No catch. No cloud. No cost.</h2>
+  <p>MIT licensed. Fork it, modify it, ship it. Your data never touches a server.</p>
   <div class="price-card">
     <div class="price-amount">$0</div>
-    <div class="price-label">MIT licensed, forever</div>
+    <div class="price-label">forever / MIT licensed</div>
     <ul class="price-features">
-      <li>Exact session + weekly usage from Anthropic</li>
-      <li>Token cost breakdown per session</li>
-      <li>Burn rate forecast with peak hours</li>
-      <li>Skills and hooks analytics</li>
-      <li>Usage history with monthly graphs</li>
-      <li>Activity heatmap with hourly detail</li>
-      <li>Session monitoring across all IDEs</li>
-      <li>100% local — zero data leaves your machine</li>
+      <li>Exact session + weekly usage directly from Anthropic</li>
+      <li>Per-session token cost breakdown by type</li>
+      <li>Burn rate forecasting with peak hour awareness</li>
+      <li>Skill and hook analytics with 7-day trends</li>
+      <li>Monthly spending history with daily granularity</li>
+      <li>Hourly activity heatmap with click-to-detail</li>
+      <li>Cross-IDE session monitoring (Terminal, T3, VS Code)</li>
+      <li>100% local — nothing phones home, ever</li>
     </ul>
-    <a href="https://github.com/kaiwilliams-dev/open-log" class="price-btn" target="_blank">Get Started on GitHub</a>
+    <a href="https://github.com/kaiwilliams-dev/open-log" class="price-btn" target="_blank">Get OpenLog on GitHub</a>
   </div>
 </section>
 
