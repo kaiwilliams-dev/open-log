@@ -864,7 +864,8 @@ async function computeHistory(): Promise<HistoryData> {
 
   if (dayMap.size === 0) {
     const empty: HistoryData = { days: [], totalCost: 0, firstDate: "", lastDate: "" };
-    setCached("history", empty, TTL_HISTORY_MS);
+    // Don't cache — too much memory
+    // setCached("history", empty, TTL_HISTORY_MS);
     return empty;
   }
 
@@ -917,7 +918,8 @@ async function computeHistory(): Promise<HistoryData> {
     lastDate: today,
   };
 
-  setCached("history", result, TTL_HISTORY_MS);
+  // Don't cache history — it holds 800MB+ in memory. Let GC free it.
+  // setCached("history", result, TTL_HISTORY_MS);
   return result;
 }
 
@@ -1148,8 +1150,8 @@ async function autoSync() {
   }
 }
 
-// Auto-sync every 5 min — but NOT on startup (saves memory/CPU on boot)
-setInterval(autoSync, AUTO_SYNC_INTERVAL_MS);
+// Auto-sync disabled — manual sync only to save usage budget
+// setInterval(autoSync, AUTO_SYNC_INTERVAL_MS);
 
 // ---------------------------------------------------------------------------
 // CORS helper

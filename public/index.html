@@ -325,8 +325,8 @@ async function updateSyncBar(){
     const[l,h]=await Promise.all([A('/api/limits'),A('/api/limits-history').catch(()=>({entries:[]}))]);
     if(l.available){
       lastSyncTs=l.ts*1000;const age=Math.floor((Date.now()-lastSyncTs)/1000);const next=Math.max(0,300-age);
-      document.getElementById('sync-dot').className='sync-dot'+(next<=0?' active':(age<300?' active':''));
-      document.getElementById('sync-text').textContent=next<=0?'Syncing...':(`Last sync: ${age<60?age+'s':Math.floor(age/60)+'m'} ago · Next in ${next<60?next+'s':Math.floor(next/60)+'m '+next%60+'s'}`);
+      document.getElementById('sync-dot').className='sync-dot active';
+      document.getElementById('sync-text').textContent=`Last sync: ${age<60?age+'s':Math.floor(age/60)+'m'} ago`;
     }else{document.getElementById('sync-text').textContent='No sync data yet'}
     // Show recent auto-sync history in the log panel (last 8)
     const log=document.getElementById('sync-log');
