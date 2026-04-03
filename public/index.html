@@ -350,7 +350,14 @@ async function loadUsage(){
         const pctPerMin=pct/minsUsed;
         const pctPerHour=Math.round(pctPerMin*60*10)/10;
         const minsTo100=pct<100?Math.round((100-pct)/pctPerMin):0;
-        burnRate=`<div style="font-family:'Poppins',sans-serif;font-size:44px;font-weight:400;letter-spacing:-1px;line-height:1;margin-top:8px">${pctPerHour}%/hr</div><div style="font-size:12px;color:var(--i3);margin-top:4px">${pct>=100?'Over limit':(minsTo100<minsLeft?'Hits 100% in ~'+minsTo100+'m':'Won\'t hit limit')}</div>`;
+        // Peak hours: 1pm-7pm GMT (Anthropic confirmed limits burn faster)
+        const gmtHour=new Date().getUTCHours();
+        const isPeak=gmtHour>=13&&gmtHour<19;
+        const peakBadge=isPeak
+          ?'<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 12px;border-radius:4px;background:#FFF3E0;font-size:11px;color:#E67E22;font-weight:500"><div style="width:6px;height:6px;border-radius:50%;background:#E67E22"></div>Peak hours — limits burn faster</div>'
+          :'<div style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 12px;border-radius:4px;background:#E8F5E9;font-size:11px;color:#2E7D32;font-weight:500"><div style="width:6px;height:6px;border-radius:50%;background:#2E7D32"></div>Off-peak — limits stretch further</div>';
+        const forecast=pct>=100?'Over limit':(minsTo100<minsLeft?'Hits 100% in ~'+minsTo100+'m':'Won\'t hit limit');
+        burnRate=`<div style="font-family:'Poppins',sans-serif;font-size:44px;font-weight:400;letter-spacing:-1px;line-height:1;margin-top:8px">${pctPerHour}%/hr</div><div style="font-size:12px;color:var(--i3);margin-top:4px">${forecast}</div>${peakBadge}`;
       }
     }
     const c=pct>90?'var(--neg)':pct>75?'var(--warn)':'var(--ink)';
