@@ -5,9 +5,13 @@
   "author": "Kai",
   "license": "MIT",
   "type": "module",
+  "bin": {
+    "openlog": "./cli.ts"
+  },
   "scripts": {
     "start": "bun run server.ts",
     "dev": "bun --watch run server.ts",
+    "openlog": "bun run cli.ts",
     "ports": "bun run ports.ts",
     "ports:watch": "bun run ports.ts --watch",
     "ports:ui": "bun run ports.ts --serve 9999",
