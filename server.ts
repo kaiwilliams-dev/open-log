@@ -987,20 +987,38 @@ interface PortInfo {
   color: string;
 }
 
+const SVG_ICONS: Record<string, string> = {
+  nextjs: '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 2L2 20h20L12 2z" fill="currentColor"/></svg>',
+  vite: '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 2l8 20L20 2h-4l-4 10L8 2H4z" fill="currentColor"/></svg>',
+  openlog: '<svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>',
+  redis: '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 2l8 5v10l-8 5-8-5V7l8-5z" fill="currentColor"/></svg>',
+  python: '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M11.5 2C8 2 8 4 8 4v2.5h4v1H6S3 7 3 11.5 5.5 16 5.5 16H8v-3s0-2.5 3.5-2.5h4S18 10.5 18 8.5v-4S18 2 11.5 2zm-.5 1.5a1 1 0 1 1 0 2 1 1 0 0 1 0-2zM12.5 22c3.5 0 3.5-2 3.5-2v-2.5h-4v-1h6s3 .5 3-4S18.5 8 18.5 8H16v3s0 2.5-3.5 2.5h-4S6 13.5 6 15.5v4S6 22 12.5 22zm.5-1.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z" fill="currentColor"/></svg>',
+  nodejs: '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 1.5l9 5.25v10.5l-9 5.25-9-5.25V6.75l9-5.25z" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
+  bun: '<svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="9" fill="currentColor"/><circle cx="10" cy="10" r="1.2" fill="white"/><circle cx="14" cy="10" r="1.2" fill="white"/><path d="M9 14c0 0 1.5 2 3 2s3-2 3-2" fill="none" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg>',
+  figma: '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M8 24c2.2 0 4-1.8 4-4v-4H8c-2.2 0-4 1.8-4 4s1.8 4 4 4zm0-24C5.8 0 4 1.8 4 4s1.8 4 4 4h4V4c0-2.2-1.8-4-4-4zm0 8C5.8 8 4 9.8 4 12s1.8 4 4 4h4V8H8zm8-8h-4v8h4c2.2 0 4-1.8 4-4s-1.8-4-4-4zm0 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z" fill="currentColor"/></svg>',
+  raycast: '<svg viewBox="0 0 24 24" width="18" height="18"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16.5 16.5L21 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  editor: '<svg viewBox="0 0 24 24" width="18" height="18"><path d="M8 3l-5 9 5 9h8l5-9-5-9H8z" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M10 9l-2 3 2 3m4-6l2 3-2 3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  spotify: '<svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="M7 9.5c3-1 7-1 10 .5M7.5 12.5c2.5-.8 5.5-.8 8 .3M8 15.5c2-.6 4.5-.6 6.5.2" fill="none" stroke="white" stroke-width="1.3" stroke-linecap="round"/></svg>',
+  system: '<svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 1v3m0 16v3M4.22 4.22l2.12 2.12m11.32 11.32l2.12 2.12M1 12h3m16 0h3M4.22 19.78l2.12-2.12m11.32-11.32l2.12-2.12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+  claudeCode: '<svg viewBox="0 0 24 24" width="18" height="18"><rect x="3" y="5" width="18" height="14" rx="3" fill="currentColor"/><text x="12" y="15" text-anchor="middle" fill="white" font-size="8" font-weight="700" font-family="system-ui">CC</text></svg>',
+  unknown: '<svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>',
+};
+
 function detectService(proc: string, cmd: string, port: number): { icon: string; label: string; color: string } {
   const c = cmd.toLowerCase(), p = proc.toLowerCase();
-  if (c.includes("next-server") || c.includes("next dev")) return { icon: "▲", label: "Next.js", color: "#000" };
-  if (c.includes("vite") || port === 5173 || port === 5174) return { icon: "⚡", label: "Vite", color: "#646CFF" };
-  if (c.includes("server.ts") && port === PORT) return { icon: "◉", label: "OpenLog", color: "#D4775C" };
-  if (p === "redis-ser" || c.includes("redis")) return { icon: "◆", label: "Redis", color: "#DC382D" };
-  if (c.includes("python") || p.startsWith("python")) return { icon: "🐍", label: "Python", color: "#3776AB" };
-  if (p === "node" || c.includes("node ")) return { icon: "⬢", label: "Node.js", color: "#339933" };
-  if (p === "bun" || c.includes("bun ")) return { icon: "🥟", label: "Bun", color: "#FBF0DF" };
-  if (c.includes("raycast")) return { icon: "🔍", label: "Raycast", color: "#FF6363" };
-  if (c.includes("figma")) return { icon: "🎨", label: "Figma", color: "#F24E1E" };
-  if (c.includes("t3 code") || c.includes("code")) return { icon: "⌨️", label: "Editor", color: "#007ACC" };
-  if (c.includes("rapportd")) return { icon: "📡", label: "System", color: "#999" };
-  return { icon: "●", label: p || "Unknown", color: "#999" };
+  if (c.includes("next-server") || c.includes("next dev")) return { icon: SVG_ICONS.nextjs, label: "Next.js", color: "#000" };
+  if (c.includes("vite") || port === 5173 || port === 5174) return { icon: SVG_ICONS.vite, label: "Vite", color: "#646CFF" };
+  if (c.includes("server.ts") && port === PORT) return { icon: SVG_ICONS.openlog, label: "OpenLog", color: "#D4775C" };
+  if (p === "redis-ser" || c.includes("redis")) return { icon: SVG_ICONS.redis, label: "Redis", color: "#DC382D" };
+  if (c.includes("python") || p.startsWith("python")) return { icon: SVG_ICONS.python, label: "Python", color: "#3776AB" };
+  if (p === "node" || c.includes("node ")) return { icon: SVG_ICONS.nodejs, label: "Node.js", color: "#339933" };
+  if (p === "bun" || c.includes("bun ")) return { icon: SVG_ICONS.bun, label: "Bun", color: "#FBF0DF" };
+  if (c.includes("raycast")) return { icon: SVG_ICONS.raycast, label: "Raycast", color: "#FF6363" };
+  if (c.includes("figma")) return { icon: SVG_ICONS.figma, label: "Figma", color: "#F24E1E" };
+  if (c.includes("t3 code") || c.includes("code")) return { icon: SVG_ICONS.editor, label: "Editor", color: "#007ACC" };
+  if (c.includes("spotify")) return { icon: SVG_ICONS.spotify, label: "Spotify", color: "#1DB954" };
+  if (c.includes("rapportd")) return { icon: SVG_ICONS.system, label: "System", color: "#999" };
+  return { icon: SVG_ICONS.unknown, label: p || "Unknown", color: "#999" };
 }
 
 async function computePorts(): Promise<PortInfo[]> {

@@ -160,7 +160,8 @@
     .svc-card{background:var(--w);border:1px solid var(--r);border-radius:10px;padding:18px;transition:all .2s}
     .svc-card:hover{border-color:#ccc;box-shadow:0 4px 20px rgba(0,0,0,0.04);transform:translateY(-1px)}
     .svc-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-    .svc-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .svc-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .svc-icon svg{width:18px;height:18px}
     .svc-title{font-size:14px;font-weight:500}
     .svc-port{font-family:'DM Mono',monospace;font-size:11px;color:var(--s)}
     .svc-port a{color:var(--s);text-decoration:none}
@@ -595,7 +596,7 @@ async function loadSe(){try{const d=await A('/api/sessions'),el=document.getElem
     return`<div class="svc-card"><div class="svc-top"><div class="svc-icon" style="background:#1A1A1A;color:#D4775C;font-family:'DM Mono',monospace;font-weight:600;font-size:13px">CC</div><div><div class="svc-title">Claude Code<span class="live-dot"></span></div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--i4)">${short}</div></div></div><div class="svc-meta"><div><div class="svc-fl">PID</div><div class="svc-fv">${s.pid}</div></div><div><div class="svc-fl">Started</div><div class="svc-fv">${R(s.startedAt?new Date(s.startedAt).toISOString():null)}</div></div><div><div class="svc-fl">Type</div><div class="svc-fv">${s.kind||'—'}</div></div><div><div class="svc-fl">App</div><div class="svc-fv">${app}</div></div></div><div class="svc-cmd" title="${cwd}">${cwd}</div></div>`;
   }).join('')}catch(e){}}
 
-// ── Ports (card layout) ──
+// ── Ports (card layout with SVG icons) ──
 async function loadPorts(){try{const d=await A('/api/ports'),el=document.getElementById('port-cards');
   if(!d.length){el.innerHTML='<span class="ld">No listening ports</span>';return}
   el.innerHTML=d.map(p=>{

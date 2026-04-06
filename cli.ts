@@ -57,20 +57,37 @@ function killExisting(): boolean {
   return false;
 }
 
-function startServer() {
-  log(`Starting on ${SALMON}http://localhost:${PORT}${RESET}`);
-  console.log();
-
-  // Replace this process with the server
-  const server = spawn("bun", ["run", "server.ts"], {
-    cwd: DIR,
-    stdio: "inherit",
-    env: { ...process.env, PORT: String(PORT) },
-  });
-
-  server.on("exit", (code) => process.exit(code ?? 0));
-  process.on("SIGINT", () => { server.kill("SIGINT"); process.exit(0); });
-  process.on("SIGTERM", () => { server.kill("SIGTERM"); process.exit(0); });
+function startServer(foreground = true) {
+  if (foreground) {
+    log(`Starting on ${SALMON}http://localhost:${PORT}${RESET}`);
+    console.log();
+    const server = spawn("bun", ["run", "server.ts"], {
+      cwd: DIR,
+      stdio: "inherit",
+      env: { ...process.env, PORT: String(PORT) },
+    });
+    server.on("exit", (code) => process.exit(code ?? 0));
+    process.on("SIGINT", () => { server.kill("SIGINT"); process.exit(0); });
+    process.on("SIGTERM", () => { server.kill("SIGTERM"); process.exit(0); });
+  } else {
+    // Background: detach from terminal
+    const server = spawn("bun", ["run", "server.ts"], {
+      cwd: DIR,
+      stdio: "ignore",
+      env: { ...process.env, PORT: String(PORT) },
+      detached: true,
+    });
+    server.unref();
+    // Wait a moment and verify it started
+    execSync("sleep 0.5");
+    const pid = isRunning();
+    if (pid) {
+      log(`Dashboard running at ${SALMON}http://localhost:${PORT}${RESET} (PID ${pid})`);
+    } else {
+      log(`${SALMON}Failed to start${RESET} — run ${BOLD}openlog start${RESET} to debug`);
+    }
+    console.log();
+  }
 }
 
 async function checkRemoteVersion(): Promise<{ latest: string; updateAvailable: boolean } | null> {
@@ -157,9 +174,11 @@ switch (cmd) {
 
     log("");
     killExisting();
-    log(`Restarting...`);
-    startServer();
-    break;
+    log("Starting in background...");
+    startServer(false);
+    log(`${SALMON}Done!${RESET} Open http://localhost:${PORT}`);
+    console.log();
+    process.exit(0);
   }
 
   case "status": {
