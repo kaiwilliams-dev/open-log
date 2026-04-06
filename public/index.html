@@ -646,7 +646,7 @@ async function init(){
     if (v.updateAvailable) {
       const banner = document.getElementById('update-banner');
       const msg = document.getElementById('update-msg');
-      msg.innerHTML = `OpenLog ${v.latest} is available (you have ${v.current}). Run <code>cd open-log && git pull && bun install</code> to update.`;
+      msg.innerHTML = `OpenLog ${v.latest} is available (you have ${v.current}). Run <code>openlog update</code> to update.`;
       banner.classList.add('show');
     }
   } catch {}
