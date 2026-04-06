@@ -23,6 +23,7 @@
     "hooks",
     "usage-tracker"
   ],
+  "homepage": "https://kais.vision/open-log",
   "repository": {
     "type": "git",
     "url": "https://github.com/kaiwilliams-dev/open-log"
