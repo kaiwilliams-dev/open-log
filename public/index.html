@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OpenLog</title>
+  <link rel="icon" href="data:,">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
@@ -235,13 +236,8 @@
 </nav>
 
 <main id="m">
-  <div id="sync-panel" style="border-bottom:1px solid var(--r2);background:var(--bg);padding:12px 48px">
-    <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-      <div class="sync-dot" id="sync-dot"></div>
-      <span id="sync-text" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--i4)">Sync: checking...</span>
-      <button id="sync-btn" style="margin-left:auto;font-family:'DM Mono',monospace;font-size:9px;padding:3px 10px;border:1px solid var(--r);border-radius:3px;color:var(--i2);background:var(--w);cursor:pointer">Sync Now</button>
-    </div>
-    <div id="sync-log" style="display:none"></div>
+  <div id="sync-status" style="padding:8px 48px;border-bottom:1px solid var(--r2);background:var(--bg)">
+    <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--i4)" id="sync-text">Auto-syncing...</span>
   </div>
   <section class="sec" id="dash">
     <h1 class="h1">Dashboard</h1>
@@ -345,17 +341,29 @@ const nav=document.querySelectorAll('.si[data-s]'),ml=document.getElementById('m
 ml.addEventListener('scroll',()=>{let c='dash';document.querySelectorAll('.sec').forEach(s=>{if(ml.scrollTop>=s.offsetTop-120)c=s.id});nav.forEach(n=>n.classList.toggle('on',n.dataset.s===c))});
 nav.forEach(n=>n.addEventListener('click',e=>{e.preventDefault();const t=document.getElementById(n.dataset.s);if(t)ml.scrollTo({top:t.offsetTop,behavior:'smooth'})}));
 
-// ── Sync Timer + Auto-sync Log ──
+// ── Favicon ──
+function updateFavicon(pct) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 32; canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = pct > 75 ? '#C0392B' : pct > 50 ? '#E67E22' : '#2E7D32';
+  ctx.beginPath(); ctx.arc(16, 16, 14, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(Math.round(pct) + '%', 16, 17);
+  const link = document.querySelector('link[rel="icon"]') || document.createElement('link');
+  link.rel = 'icon'; link.href = canvas.toDataURL();
+  document.head.appendChild(link);
+}
+
+// ── Sync Timer ──
 let lastSyncTs=0;
 async function updateSyncBar(){
   try{
-    const[l,h]=await Promise.all([A('/api/limits'),A('/api/limits-history').catch(()=>({entries:[]}))]);
+    const l=await A('/api/limits');
     if(l.available){
-      lastSyncTs=l.ts*1000;const age=Math.floor((Date.now()-lastSyncTs)/1000);const next=Math.max(0,300-age);
-      document.getElementById('sync-dot').className='sync-dot active';
+      lastSyncTs=l.ts*1000;const age=Math.floor((Date.now()-lastSyncTs)/1000);
       document.getElementById('sync-text').textContent=`Last sync: ${age<60?age+'s':Math.floor(age/60)+'m'} ago`;
-    }else{document.getElementById('sync-text').textContent='No sync data yet'}
-    // Sync log disabled — clean UI
+    }else{document.getElementById('sync-text').textContent='Auto-syncing...'}
   }catch(e){}}
 
 // ── Usage ──
@@ -401,6 +409,10 @@ async function loadUsage(){
     else if(pct<90){gc='var(--warn)';gl='Hot';gd='Slow down'}
     else{gc='var(--neg)';gl='Critical';gd='Near limit'}
     document.getElementById('gauge-row').innerHTML=`<div class="ga"><div class="gd" style="background:${gc}"></div><div><div class="gt">${gl}</div><div class="gdt">${gd}</div></div></div>`;
+    // Update browser tab title and favicon
+    const titlePct=pct.toFixed(0);const titleCost=$(cost);
+    document.title=(pct>75?'⚠️ ':'')+titlePct+'% — '+titleCost+' | OpenLog';
+    updateFavicon(pct);
     // Cost breakdown row (below stats)
     const items=[{l:'Input',t:cb.input?.tokens,c:cb.input?.cost},{l:'Output',t:cb.output?.tokens,c:cb.output?.cost},{l:'Cache Create',t:cb.cacheCreation?.tokens,c:cb.cacheCreation?.cost},{l:'Cache Read',t:cb.cacheRead?.tokens,c:cb.cacheRead?.cost}];
     document.getElementById('cost-row').innerHTML=items.map(i=>`<div class="cc"><div class="cl">${i.l}</div><div class="ct">${F(i.t)} tok</div><div class="cv">${$(i.c)}</div></div>`).join('');
@@ -604,35 +616,14 @@ async function loadPorts(){try{const d=await A('/api/ports'),el=document.getElem
     return`<div class="svc-card"><div class="svc-top"><div class="svc-icon" style="background:${bg};color:${p.color}">${p.icon}</div><div><div class="svc-title">${E(p.label)}<span class="live-dot"></span></div><div class="svc-port"><a href="http://localhost:${p.port}" target="_blank">localhost:${p.port}</a></div></div></div><div class="svc-meta"><div><div class="svc-fl">PID</div><div class="svc-fv">${p.pid}</div></div><div><div class="svc-fl">Memory</div><div class="svc-fv">${p.memory}</div></div></div><div class="svc-cmd" title="${E(p.command)}">${E(p.command)}</div></div>`;
   }).join('')}catch(e){}}
 
-// ── Sync Now button ──
-function slog(msg,color){/* logs disabled */}
-document.getElementById('sync-btn').onclick=async()=>{
-  const btn=document.getElementById('sync-btn');
-  const st=document.getElementById('sync-text');
-  btn.disabled=true;btn.textContent='Syncing...';
-  st.textContent='Syncing...';
-  let success=false;
-  for(let attempt=1;attempt<=2;attempt++){
-    try{
-      if(attempt===2)st.textContent='Retrying...';
-      const r=await fetch('/api/sync-limits',{method:'POST'});
-      const d=await r.json();
-      if(d.limits_captured){
-        const rl=d.limits?.rate_limited;
-        st.textContent=rl?'Rate limited (100%) — waiting for reset':`Synced: ${d.limits?.five_hour?.pct}% session`;
-        await loadUsage();await updateSyncBar();
-        success=true;break;
-      }
-    }catch(e){}
-    if(attempt===1)await new Promise(r=>setTimeout(r,1000));
-  }
-  if(!success)st.textContent='Sync failed — try again';
-  btn.disabled=false;btn.textContent='Sync Now';
-};
-
 // ── Init ──
 async function init(){
-  await Promise.allSettled([loadUsage(),loadStats(),loadAct(),loadSk(),loadHk(),loadHm(),loadSe(),loadPorts(),updateSyncBar(),loadLimitsHistory()]);
+  // Priority 1: Usage (visible immediately)
+  await loadUsage();
+  // Priority 2: Stats (visible on dashboard)
+  await loadStats();
+  // Priority 3: Everything else in parallel
+  Promise.allSettled([loadAct(),loadSk(),loadHk(),loadHm(),loadSe(),loadPorts(),updateSyncBar(),loadLimitsHistory()]);
   // History is HEAVY (1.15GB scan) — only load when user scrolls to it
   let histLoaded=false;
   const histSection=document.getElementById('hist');

@@ -50,6 +50,9 @@ const DENOMINATOR = BUDGET_DOLLARS * 1_000_000;
 const TTL_USAGE_MS = 30_000;   // 30s — usage endpoint
 const TTL_DEFAULT_MS = 60_000; // 60s — all other endpoints
 
+// Stale-while-revalidate: serve data up to this many ms past TTL while refreshing in background
+const SWR_GRACE_MS = 10_000; // 10s grace window
+
 // ---------------------------------------------------------------------------
 // Type definitions
 // ---------------------------------------------------------------------------
@@ -133,22 +136,51 @@ interface ActivityEvent {
 interface CacheEntry<T> {
   data: T;
   expiresAt: number;
+  revalidating?: boolean;
 }
 
 const cache = new Map<string, CacheEntry<unknown>>();
 
+/**
+ * Get cached value. Implements stale-while-revalidate:
+ * - If fresh: return immediately.
+ * - If within SWR_GRACE_MS past expiry: return stale data AND kick off background refresh.
+ * - If too stale: return null (caller will block and compute fresh data).
+ */
 function getCached<T>(key: string): T | null {
   const entry = cache.get(key) as CacheEntry<T> | undefined;
   if (!entry) return null;
-  if (Date.now() > entry.expiresAt) {
-    cache.delete(key);
-    return null;
-  }
-  return entry.data;
+  const now = Date.now();
+  if (now <= entry.expiresAt) return entry.data; // fresh
+  if (now <= entry.expiresAt + SWR_GRACE_MS) return entry.data; // stale but within grace — caller serves immediately
+  cache.delete(key);
+  return null;
+}
+
+/**
+ * Like getCached but also returns whether the entry is stale (needs background refresh).
+ */
+function getCachedWithStaleness<T>(key: string): { data: T; stale: boolean } | null {
+  const entry = cache.get(key) as CacheEntry<T> | undefined;
+  if (!entry) return null;
+  const now = Date.now();
+  if (now <= entry.expiresAt) return { data: entry.data, stale: false };
+  if (now <= entry.expiresAt + SWR_GRACE_MS) return { data: entry.data, stale: true };
+  cache.delete(key);
+  return null;
 }
 
 function setCached<T>(key: string, data: T, ttlMs: number): void {
   cache.set(key, { data, expiresAt: Date.now() + ttlMs });
+}
+
+function isCacheRevalidating(key: string): boolean {
+  return !!(cache.get(key) as CacheEntry<unknown> | undefined)?.revalidating;
+}
+
+function markCacheRevalidating(key: string): void {
+  const entry = cache.get(key);
+  if (entry) (entry as CacheEntry<unknown>).revalidating = true;
 }
 
 // ---------------------------------------------------------------------------
@@ -217,6 +249,65 @@ async function getMtimeMs(filePath: string): Promise<number> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// File index cache — avoids re-scanning all directories on every request
+// ---------------------------------------------------------------------------
+
+interface FileIndexEntry {
+  path: string;
+  mtimeMs: number;
+}
+
+interface FileIndex {
+  files: FileIndexEntry[];
+  builtAt: number;
+}
+
+let fileIndexCache: FileIndex | null = null;
+const FILE_INDEX_TTL_MS = 10_000; // Rebuild directory listing every 10s max
+
+/**
+ * Return all JSONL files with their cached mtimes. Only re-stats files
+ * whose mtime may have changed since the last index was built.
+ */
+async function getFileIndex(): Promise<FileIndexEntry[]> {
+  const now = Date.now();
+
+  // If index is fresh, return it as-is
+  if (fileIndexCache && now - fileIndexCache.builtAt < FILE_INDEX_TTL_MS) {
+    return fileIndexCache.files;
+  }
+
+  // Re-enumerate directory structure (cheap — just readdir, no file reads)
+  const freshPaths = await getAllJsonlFiles();
+
+  // Re-stat all files in parallel to pick up any mtime changes.
+  // On a local SSD this is fast — hundreds of stat() calls take <20ms.
+  const entries = await Promise.all(
+    freshPaths.map(async (p): Promise<FileIndexEntry> => ({
+      path: p,
+      mtimeMs: await getMtimeMs(p),
+    }))
+  );
+
+  fileIndexCache = { files: entries, builtAt: now };
+
+  return entries;
+}
+
+/**
+ * Return file paths modified within the last `withinMs` milliseconds,
+ * using the file index cache to avoid per-file stat calls.
+ */
+async function recentFilesFromIndex(withinMs: number): Promise<string[]> {
+  const cutoff = Date.now() - withinMs;
+  const index = await getFileIndex();
+
+  // For files that are new-ish, re-stat them to get accurate mtime
+  // (index may be up to FILE_INDEX_TTL_MS stale)
+  return index.filter((e) => e.mtimeMs >= cutoff).map((e) => e.path);
+}
+
 /**
  * Parse a .jsonl file line-by-line. Skips blank lines and invalid JSON.
  * Calls `onRecord` for each successfully parsed record.
@@ -244,35 +335,17 @@ async function parseJsonlFile(
   }
 }
 
-/**
- * Return only files modified within the last `withinMs` milliseconds.
- */
-async function recentFiles(files: string[], withinMs: number): Promise<string[]> {
-  const cutoff = Date.now() - withinMs;
-  const results = await Promise.all(
-    files.map(async (f) => {
-      const mtime = await getMtimeMs(f);
-      return mtime >= cutoff ? f : null;
-    })
-  );
-  return results.filter((f): f is string => f !== null);
-}
-
 // ---------------------------------------------------------------------------
 // /api/usage — 5-hour rolling window token cost
 // ---------------------------------------------------------------------------
 
-async function computeUsage() {
-  const cached = getCached<ReturnType<typeof buildUsageResponse>>("usage");
-  if (cached) return cached;
-
+async function computeUsageCore() {
   const now = Date.now();
   const windowMs = 5 * 60 * 60 * 1000; // 5 hours
   const windowStart = new Date(now - windowMs);
 
-  const allFiles = await getAllJsonlFiles();
-  // Only read files modified in the last 5 hours
-  const candidates = await recentFiles(allFiles, windowMs);
+  // Use the file index cache — avoids re-scanning all directories
+  const candidates = await recentFilesFromIndex(windowMs);
 
   let inputTokens = 0;
   let outputTokens = 0;
@@ -309,6 +382,21 @@ async function computeUsage() {
   return result;
 }
 
+async function computeUsage() {
+  const hit = getCachedWithStaleness<ReturnType<typeof buildUsageResponse>>("usage");
+
+  if (hit) {
+    // Stale-while-revalidate: if stale and not already revalidating, kick off background refresh
+    if (hit.stale && !isCacheRevalidating("usage")) {
+      markCacheRevalidating("usage");
+      computeUsageCore().catch(() => {}); // fire-and-forget
+    }
+    return hit.data;
+  }
+
+  return computeUsageCore();
+}
+
 function buildUsageResponse(
   inputTokens: number,
   outputTokens: number,
@@ -332,8 +420,19 @@ function buildUsageResponse(
 
   const percentage = (weightedSum / DENOMINATOR) * 100;
 
+  // Build a browser tab title: "OpenLog — 33% used" or "OpenLog — $197" depending on magnitude
+  const pctRounded = Math.round(percentage * 10) / 10;
+  const costRounded = Math.round(totalCost * 100) / 100;
+  const title =
+    pctRounded > 0
+      ? `OpenLog — ${pctRounded}% used`
+      : costRounded > 0
+      ? `OpenLog — $${costRounded}`
+      : "OpenLog";
+
   return {
-    percentage: Math.round(percentage * 10) / 10,
+    percentage: pctRounded,
+    title,
     costBreakdown: {
       input: { tokens: inputTokens, cost: Math.round(inputCost * 1000) / 1000 },
       output: { tokens: outputTokens, cost: Math.round(outputCost * 1000) / 1000 },
@@ -360,8 +459,7 @@ async function computeStats(days: number) {
   const windowMs = days * 24 * 60 * 60 * 1000;
   const cutoff = new Date(now - windowMs);
 
-  const allFiles = await getAllJsonlFiles();
-  const candidates = await recentFiles(allFiles, windowMs);
+  const candidates = await recentFilesFromIndex(windowMs);
 
   const skillNames = new Set<string>();
   let totalTriggers = 0;
@@ -437,10 +535,9 @@ async function computeActivity() {
   const cached = getCached<ActivityEvent[]>("activity");
   if (cached) return cached;
 
-  const allFiles = await getAllJsonlFiles();
   // Scan files modified in last 7 days for activity
   const windowMs = 7 * 24 * 60 * 60 * 1000;
-  const candidates = await recentFiles(allFiles, windowMs);
+  const candidates = await recentFilesFromIndex(windowMs);
 
   const events: ActivityEvent[] = [];
 
@@ -527,8 +624,7 @@ async function computeSkills() {
 
   const now = Date.now();
   const windowMs = 30 * 24 * 60 * 60 * 1000; // scan 30 days
-  const allFiles = await getAllJsonlFiles();
-  const candidates = await recentFiles(allFiles, windowMs);
+  const candidates = await recentFilesFromIndex(windowMs);
 
   // Map: skillName -> { triggers, timestamps, turnDurations }
   const skillMap = new Map<
@@ -622,8 +718,7 @@ async function computeHooks() {
   if (cached) return cached;
 
   const windowMs = 30 * 24 * 60 * 60 * 1000;
-  const allFiles = await getAllJsonlFiles();
-  const candidates = await recentFiles(allFiles, windowMs);
+  const candidates = await recentFilesFromIndex(windowMs);
 
   // Map: hookName -> { event, command, fires, lastFired }
   const hookMap = new Map<
@@ -688,8 +783,7 @@ async function computeHeatmap() {
 
   const now = new Date();
   const windowMs = 7 * 24 * 60 * 60 * 1000;
-  const allFiles = await getAllJsonlFiles();
-  const candidates = await recentFiles(allFiles, windowMs);
+  const candidates = await recentFilesFromIndex(windowMs);
 
   // Grid: [dayIndex (0=oldest)][hour]
   const grid: number[][] = Array.from({ length: 7 }, () => new Array(24).fill(0));
@@ -742,8 +836,7 @@ async function computeHeatmapDetail(date: string, hour: number) {
   const hourStart = new Date(dayStart.getTime() + hour * 3600000);
   const hourEnd = new Date(hourStart.getTime() + 3600000);
 
-  const allFiles = await getAllJsonlFiles();
-  const candidates = await recentFiles(allFiles, 8 * 24 * 3600000); // 8 days
+  const candidates = await recentFilesFromIndex(8 * 24 * 3600000); // 8 days
 
   const skills: Record<string, number> = {};
   const hooks: Record<string, number> = {};
@@ -836,7 +929,9 @@ async function computeHistory(): Promise<HistoryData> {
   const cached = getCached<HistoryData>("history");
   if (cached) return cached;
 
-  const allFiles = await getAllJsonlFiles();
+  // Use the file index to get all known paths (no mtime filter — history scans everything)
+  const index = await getFileIndex();
+  const allFiles = index.map((e) => e.path);
 
   // date string (YYYY-MM-DD) -> accumulator
   const dayMap = new Map<
@@ -1026,9 +1121,12 @@ async function computePorts(): Promise<PortInfo[]> {
   if (cached) return cached;
 
   try {
+    // Single call to get all listening ports
     const raw = execSync("lsof -iTCP -sTCP:LISTEN -nP 2>/dev/null", { encoding: "utf-8", timeout: 5000 });
+
+    // Collect unique PIDs first
     const lines = raw.trim().split("\n").slice(1);
-    const seen = new Map<number, PortInfo>();
+    const pidToPort = new Map<number, { proc: string; port: number }>();
 
     for (const line of lines) {
       const parts = line.split(/\s+/);
@@ -1037,14 +1135,44 @@ async function computePorts(): Promise<PortInfo[]> {
       const m = name.match(/:(\d+)$/);
       if (!m) continue;
       const port = parseInt(m[1], 10);
+      if (!pidToPort.has(pid)) pidToPort.set(pid, { proc, port });
+    }
+
+    if (pidToPort.size === 0) return [];
+
+    // Single batched ps call: get pid, rss (KB), and full command for all processes at once
+    const pids = [...pidToPort.keys()].join(",");
+    let psMap = new Map<number, { rss: number; command: string }>();
+    try {
+      const psRaw = execSync(`ps -p ${pids} -o pid=,rss=,command= 2>/dev/null`, { encoding: "utf-8", timeout: 5000 });
+      for (const psLine of psRaw.trim().split("\n")) {
+        const trimmed = psLine.trimStart();
+        const spaceAfterPid = trimmed.indexOf(" ");
+        if (spaceAfterPid < 0) continue;
+        const pid = parseInt(trimmed.slice(0, spaceAfterPid), 10);
+        const rest = trimmed.slice(spaceAfterPid + 1).trimStart();
+        const spaceAfterRss = rest.indexOf(" ");
+        if (spaceAfterRss < 0) continue;
+        const rss = parseInt(rest.slice(0, spaceAfterRss), 10);
+        const command = rest.slice(spaceAfterRss + 1).trim();
+        psMap.set(pid, { rss, command });
+      }
+    } catch {}
+
+    const seen = new Map<number, PortInfo>();
+
+    for (const [pid, { proc, port }] of pidToPort) {
       if (seen.has(port)) continue;
-
-      let command = proc, memory = "";
-      try { command = execSync(`ps -p ${pid} -o command= 2>/dev/null`, { encoding: "utf-8", timeout: 2000 }).trim(); if (command.length > 100) command = command.slice(0, 97) + "..."; } catch {}
-      try { const rss = execSync(`ps -p ${pid} -o rss= 2>/dev/null`, { encoding: "utf-8", timeout: 2000 }).trim(); const mb = parseInt(rss, 10) / 1024; memory = mb >= 1024 ? `${(mb / 1024).toFixed(1)}GB` : `${mb.toFixed(0)}MB`; } catch {}
-
+      const psInfo = psMap.get(pid);
+      let command = psInfo?.command ?? proc;
+      if (command.length > 100) command = command.slice(0, 97) + "...";
+      let memory = "—";
+      if (psInfo?.rss) {
+        const mb = psInfo.rss / 1024;
+        memory = mb >= 1024 ? `${(mb / 1024).toFixed(1)}GB` : `${mb.toFixed(0)}MB`;
+      }
       const svc = detectService(proc, command, port);
-      seen.set(port, { port, pid, process: proc, command, memory: memory || "—", ...svc });
+      seen.set(port, { port, pid, process: proc, command, memory, ...svc });
     }
 
     const result = [...seen.values()].sort((a, b) => a.port - b.port);
@@ -1237,8 +1365,8 @@ async function autoSync() {
   }
 }
 
-// Auto-sync disabled — manual sync only to save usage budget
-// setInterval(autoSync, AUTO_SYNC_INTERVAL_MS);
+// Auto-sync enabled — runs every 5 minutes to keep limits data live
+setInterval(autoSync, AUTO_SYNC_INTERVAL_MS);
 
 // ---------------------------------------------------------------------------
 // CORS helper
@@ -1460,6 +1588,9 @@ const server = Bun.serve({
   fetch: handleRequest,
 });
 
+// Warm the usage cache immediately on startup so the first request is instant
+computeUsageCore().catch(() => {});
+
 console.log(`\n  OpenLog v${CURRENT_VERSION} — Claude Code Analytics Dashboard`);
 console.log(`  ─────────────────────────────────────────`);
 console.log(`  Local:   http://localhost:${PORT}`);
@@ -1473,4 +1604,5 @@ console.log(`    GET /api/hooks    — hook analytics`);
 console.log(`    GET /api/heatmap  — trigger heatmap`);
 console.log(`    GET /api/sessions — active sessions`);
 console.log(`    GET /api/history  — daily usage from first session`);
-console.log(`\n  Cache TTL: 30s (usage: 10s, history: 5m)\n`);
+console.log(`\n  Cache TTL: usage=30s (SWR +10s grace), default=60s, history=1h`);
+console.log(`  Auto-sync: every 5 minutes\n`);
