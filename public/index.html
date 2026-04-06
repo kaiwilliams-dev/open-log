@@ -155,14 +155,22 @@
     .sea.ide{background:#FFF3E0;color:var(--warn)}
     .sea.vsc{background:#E3F2FD;color:#1976D2}
 
-    /* Sessions */
-    .sei{padding:12px 0;border-bottom:1px solid var(--r2);display:grid;grid-template-columns:1fr auto;gap:12px}
-    .sei:last-child{border-bottom:none}
-    .set{display:flex;align-items:center;gap:10px;margin-bottom:3px}
-    .sep{font-family:'DM Mono',monospace;font-size:11px;color:var(--s)}
-    .sek{font-family:'DM Mono',monospace;font-size:9px;background:var(--bg);border:1px solid var(--r);padding:1px 6px;color:var(--i2)}
-    .sed{font-size:11px;color:var(--i3);font-weight:300}
-    .setm{font-family:'DM Mono',monospace;font-size:10px;color:var(--i4);text-align:right;white-space:nowrap}
+    /* Card grid for sessions & ports */
+    .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+    .svc-card{background:var(--w);border:1px solid var(--r);border-radius:10px;padding:18px;transition:all .2s}
+    .svc-card:hover{border-color:#ccc;box-shadow:0 4px 20px rgba(0,0,0,0.04);transform:translateY(-1px)}
+    .svc-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .svc-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .svc-title{font-size:14px;font-weight:500}
+    .svc-port{font-family:'DM Mono',monospace;font-size:11px;color:var(--s)}
+    .svc-port a{color:var(--s);text-decoration:none}
+    .svc-port a:hover{text-decoration:underline}
+    .svc-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
+    .svc-fl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--i4)}
+    .svc-fv{font-family:'DM Mono',monospace;font-size:11px;color:var(--i2)}
+    .svc-cmd{font-family:'DM Mono',monospace;font-size:10px;color:var(--i3);background:var(--bg);padding:7px 10px;border-radius:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .live-dot{width:6px;height:6px;border-radius:50%;background:#2E7D32;display:inline-block;margin-left:6px;animation:ldot 2s ease-in-out infinite}
+    @keyframes ldot{0%,100%{opacity:1}50%{opacity:.3}}
 
     .footer{display:flex;justify-content:space-between;padding:20px 48px;font-family:'DM Mono',monospace;font-size:10px;color:var(--i4)}
 
@@ -219,6 +227,7 @@
     </div>
     <div class="sg"><span class="sl">System</span>
       <a class="si" href="#sess" data-s="sess">Sessions</a>
+      <a class="si" href="#ports" data-s="ports">Ports</a>
     </div>
   </div>
   <div class="sf"><div class="av">K</div><div><div style="font-size:12px;font-weight:500">Kai</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--s)">Max</div></div></div>
@@ -311,10 +320,15 @@
 
   <section class="sec" id="sess">
     <div class="sh"><h2 class="st">Sessions</h2></div>
-    <div id="sel"><span class="ld">...</span></div>
+    <div class="card-grid" id="sel"><span class="ld">...</span></div>
   </section>
 
-  <footer class="footer"><span>OpenLog v0.1</span></footer>
+  <section class="sec" id="ports">
+    <div class="sh"><h2 class="st">Localhost Services</h2></div>
+    <div class="card-grid" id="port-cards"><span class="ld">...</span></div>
+  </section>
+
+  <footer class="footer"><span>OpenLog v0.1.1</span></footer>
 </main>
 
 <script>
@@ -570,14 +584,23 @@ async function loadLimitsHistory(){
   }catch(e){const bw=document.getElementById('lhbw');if(bw)bw.innerHTML='<span class="ld" style="font-size:10px">—</span>';}
 }
 
-// ── Sessions (with app badge) ──
+// ── Sessions (card layout) ──
 async function loadSe(){try{const d=await A('/api/sessions'),el=document.getElementById('sel');
-  if(!d.length){el.innerHTML='<span class="ld">None</span>';return}
+  if(!d.length){el.innerHTML='<span class="ld">No active sessions</span>';return}
   el.innerHTML=d.map(s=>{
     const ep=s.entrypoint||'cli';
     const app=APP[ep]||ep;
-    const cls=ep==='cli'?'cli':ep==='sdk-ts'?'ide':'vsc';
-    return`<div class="sei"><div><div class="set"><span class="sep">PID ${s.pid}</span><span class="sea ${cls}">${app}</span><span class="sek">${s.kind||'—'}</span></div><div class="sed">${E(s.cwd)}</div></div><div class="setm">${R(s.startedAt?new Date(s.startedAt).toISOString():null)}</div></div>`;
+    const cwd=E(s.cwd||'—');
+    const short=cwd.split('/').slice(-2).join('/');
+    return`<div class="svc-card"><div class="svc-top"><div class="svc-icon" style="background:#1A1A1A;color:#D4775C;font-family:'DM Mono',monospace;font-weight:600;font-size:13px">CC</div><div><div class="svc-title">Claude Code<span class="live-dot"></span></div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--i4)">${short}</div></div></div><div class="svc-meta"><div><div class="svc-fl">PID</div><div class="svc-fv">${s.pid}</div></div><div><div class="svc-fl">Started</div><div class="svc-fv">${R(s.startedAt?new Date(s.startedAt).toISOString():null)}</div></div><div><div class="svc-fl">Type</div><div class="svc-fv">${s.kind||'—'}</div></div><div><div class="svc-fl">App</div><div class="svc-fv">${app}</div></div></div><div class="svc-cmd" title="${cwd}">${cwd}</div></div>`;
+  }).join('')}catch(e){}}
+
+// ── Ports (card layout) ──
+async function loadPorts(){try{const d=await A('/api/ports'),el=document.getElementById('port-cards');
+  if(!d.length){el.innerHTML='<span class="ld">No listening ports</span>';return}
+  el.innerHTML=d.map(p=>{
+    const bg=p.color+'18';
+    return`<div class="svc-card"><div class="svc-top"><div class="svc-icon" style="background:${bg};color:${p.color}">${p.icon}</div><div><div class="svc-title">${E(p.label)}<span class="live-dot"></span></div><div class="svc-port"><a href="http://localhost:${p.port}" target="_blank">localhost:${p.port}</a></div></div></div><div class="svc-meta"><div><div class="svc-fl">PID</div><div class="svc-fv">${p.pid}</div></div><div><div class="svc-fl">Memory</div><div class="svc-fv">${p.memory}</div></div></div><div class="svc-cmd" title="${E(p.command)}">${E(p.command)}</div></div>`;
   }).join('')}catch(e){}}
 
 // ── Sync Now button ──
@@ -608,7 +631,7 @@ document.getElementById('sync-btn').onclick=async()=>{
 
 // ── Init ──
 async function init(){
-  await Promise.allSettled([loadUsage(),loadStats(),loadAct(),loadSk(),loadHk(),loadHm(),loadSe(),updateSyncBar(),loadLimitsHistory()]);
+  await Promise.allSettled([loadUsage(),loadStats(),loadAct(),loadSk(),loadHk(),loadHm(),loadSe(),loadPorts(),updateSyncBar(),loadLimitsHistory()]);
   // History is HEAVY (1.15GB scan) — only load when user scrolls to it
   let histLoaded=false;
   const histSection=document.getElementById('hist');
@@ -632,7 +655,7 @@ init();
 // Relaxed intervals to reduce CPU/IO load
 setInterval(loadUsage,30000);        // was 10s, now 30s
 setInterval(()=>{loadAct();updateSyncBar()},60000);  // was 30s, now 60s
-setInterval(()=>{loadStats();loadSk();loadHk();loadSe();loadHm()},120000); // was 60s, now 120s
+setInterval(()=>{loadStats();loadSk();loadHk();loadSe();loadHm();loadPorts()},120000); // was 60s, now 120s
 // No auto-refresh for history — too heavy. User scrolls to it to load once.
 window.addEventListener('resize',()=>{if(HM.length)rm()});
 </script>

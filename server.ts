@@ -29,7 +29,7 @@ const SESSIONS_DIR = join(CLAUDE_DIR, "sessions");
 const PUBLIC_DIR = join(import.meta.dir, "public");
 
 // Current version (read from package.json at startup)
-const CURRENT_VERSION = "0.1.0";
+const CURRENT_VERSION = "0.1.1";
 const GITHUB_REPO = "kaiwilliams-dev/open-log";
 
 // Cost-per-million-token rates (used for usage % calculation)
@@ -971,6 +971,71 @@ async function computeSessions() {
 }
 
 // ---------------------------------------------------------------------------
+// /api/ports — Active localhost services
+// ---------------------------------------------------------------------------
+
+import { execSync } from "node:child_process";
+
+interface PortInfo {
+  port: number;
+  pid: number;
+  process: string;
+  command: string;
+  memory: string;
+  icon: string;
+  label: string;
+  color: string;
+}
+
+function detectService(proc: string, cmd: string, port: number): { icon: string; label: string; color: string } {
+  const c = cmd.toLowerCase(), p = proc.toLowerCase();
+  if (c.includes("next-server") || c.includes("next dev")) return { icon: "▲", label: "Next.js", color: "#000" };
+  if (c.includes("vite") || port === 5173 || port === 5174) return { icon: "⚡", label: "Vite", color: "#646CFF" };
+  if (c.includes("server.ts") && port === PORT) return { icon: "◉", label: "OpenLog", color: "#D4775C" };
+  if (p === "redis-ser" || c.includes("redis")) return { icon: "◆", label: "Redis", color: "#DC382D" };
+  if (c.includes("python") || p.startsWith("python")) return { icon: "🐍", label: "Python", color: "#3776AB" };
+  if (p === "node" || c.includes("node ")) return { icon: "⬢", label: "Node.js", color: "#339933" };
+  if (p === "bun" || c.includes("bun ")) return { icon: "🥟", label: "Bun", color: "#FBF0DF" };
+  if (c.includes("raycast")) return { icon: "🔍", label: "Raycast", color: "#FF6363" };
+  if (c.includes("figma")) return { icon: "🎨", label: "Figma", color: "#F24E1E" };
+  if (c.includes("t3 code") || c.includes("code")) return { icon: "⌨️", label: "Editor", color: "#007ACC" };
+  if (c.includes("rapportd")) return { icon: "📡", label: "System", color: "#999" };
+  return { icon: "●", label: p || "Unknown", color: "#999" };
+}
+
+async function computePorts(): Promise<PortInfo[]> {
+  const cached = getCached<PortInfo[]>("ports");
+  if (cached) return cached;
+
+  try {
+    const raw = execSync("lsof -iTCP -sTCP:LISTEN -nP 2>/dev/null", { encoding: "utf-8", timeout: 5000 });
+    const lines = raw.trim().split("\n").slice(1);
+    const seen = new Map<number, PortInfo>();
+
+    for (const line of lines) {
+      const parts = line.split(/\s+/);
+      if (parts.length < 9) continue;
+      const proc = parts[0], pid = parseInt(parts[1], 10), name = parts[8];
+      const m = name.match(/:(\d+)$/);
+      if (!m) continue;
+      const port = parseInt(m[1], 10);
+      if (seen.has(port)) continue;
+
+      let command = proc, memory = "";
+      try { command = execSync(`ps -p ${pid} -o command= 2>/dev/null`, { encoding: "utf-8", timeout: 2000 }).trim(); if (command.length > 100) command = command.slice(0, 97) + "..."; } catch {}
+      try { const rss = execSync(`ps -p ${pid} -o rss= 2>/dev/null`, { encoding: "utf-8", timeout: 2000 }).trim(); const mb = parseInt(rss, 10) / 1024; memory = mb >= 1024 ? `${(mb / 1024).toFixed(1)}GB` : `${mb.toFixed(0)}MB`; } catch {}
+
+      const svc = detectService(proc, command, port);
+      seen.set(port, { port, pid, process: proc, command, memory: memory || "—", ...svc });
+    }
+
+    const result = [...seen.values()].sort((a, b) => a.port - b.port);
+    setCached("ports", result, TTL_DEFAULT_MS);
+    return result;
+  } catch { return []; }
+}
+
+// ---------------------------------------------------------------------------
 // /api/limits — Read real-time limits from statusline hook capture
 // ---------------------------------------------------------------------------
 
@@ -1346,6 +1411,11 @@ async function handleRequest(req: Request): Promise<Response> {
 
       case "/api/sync-costs": {
         const data = await readSyncCosts();
+        return jsonResponse(data);
+      }
+
+      case "/api/ports": {
+        const data = await computePorts();
         return jsonResponse(data);
       }
 
