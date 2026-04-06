@@ -13,6 +13,14 @@
     body{font-family:'DM Sans',sans-serif;color:var(--ink);background:var(--w);display:flex;height:100vh;overflow:hidden;-webkit-font-smoothing:antialiased}
     a{color:inherit;text-decoration:none}button{cursor:pointer;border:none;background:none;font:inherit}
 
+    .update-banner{display:none;position:fixed;top:0;left:var(--sw);right:0;z-index:200;background:#1A1A1A;color:rgba(255,255,255,0.85);font-size:13px;font-weight:300;padding:10px 48px;align-items:center;justify-content:space-between}
+    .update-banner.show{display:flex}
+    .update-banner a{color:#D4775C;text-decoration:underline;font-weight:400;margin:0 4px}
+    .update-banner a:hover{color:#fff}
+    .update-banner code{font-family:'DM Mono',monospace;font-size:11px;background:rgba(255,255,255,0.1);padding:2px 8px;border-radius:3px;margin:0 4px}
+    .update-banner .dismiss{color:rgba(255,255,255,0.4);cursor:pointer;font-size:18px;margin-left:16px;transition:color .15s}
+    .update-banner .dismiss:hover{color:#fff}
+
     #sb{width:var(--sw);height:100vh;display:flex;flex-direction:column;border-right:1px solid var(--r);position:fixed;top:0;left:0;z-index:100;background:var(--w)}
     .logo{padding:24px 20px 20px;border-bottom:1px solid var(--r2);font-family:'Poppins',sans-serif;font-size:20px}
     .logo b{color:var(--ink);font-weight:600}
@@ -192,6 +200,10 @@
   </style>
 </head>
 <body>
+<div class="update-banner" id="update-banner">
+  <span id="update-msg"></span>
+  <span class="dismiss" onclick="this.parentElement.classList.remove('show')">&times;</span>
+</div>
 <nav id="sb">
   <div class="logo">Open<b>Log</b></div>
   <div class="sn">
@@ -604,6 +616,17 @@ async function init(){
     if(entries[0].isIntersecting&&!histLoaded){histLoaded=true;loadHist();histObserver.disconnect()}
   },{root:document.getElementById('m'),threshold:0.1});
   histObserver.observe(histSection);
+  // Check for updates on startup
+  try {
+    const vRes = await fetch('/api/version');
+    const v = await vRes.json();
+    if (v.updateAvailable) {
+      const banner = document.getElementById('update-banner');
+      const msg = document.getElementById('update-msg');
+      msg.innerHTML = `OpenLog ${v.latest} is available (you have ${v.current}). Run <code>cd open-log && git pull && bun install</code> to update.`;
+      banner.classList.add('show');
+    }
+  } catch {}
 }
 init();
 // Relaxed intervals to reduce CPU/IO load

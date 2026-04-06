@@ -28,6 +28,10 @@ const PROJECTS_DIR = join(CLAUDE_DIR, "projects");
 const SESSIONS_DIR = join(CLAUDE_DIR, "sessions");
 const PUBLIC_DIR = join(import.meta.dir, "public");
 
+// Current version (read from package.json at startup)
+const CURRENT_VERSION = "0.1.0";
+const GITHUB_REPO = "kaiwilliams-dev/open-log";
+
 // Cost-per-million-token rates (used for usage % calculation)
 const RATE = {
   input: 15,
@@ -1191,6 +1195,66 @@ async function serveStatic(filePath: string): Promise<Response> {
 }
 
 // ---------------------------------------------------------------------------
+// Update checker — pings GitHub API for latest release (cached 1 hour)
+// ---------------------------------------------------------------------------
+
+let updateCache: { data: unknown; ts: number } | null = null;
+const UPDATE_CACHE_TTL = 3_600_000; // 1 hour
+
+async function checkForUpdate() {
+  if (updateCache && Date.now() - updateCache.ts < UPDATE_CACHE_TTL) {
+    return updateCache.data;
+  }
+
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`,
+      { headers: { "User-Agent": "OpenLog/" + CURRENT_VERSION } }
+    );
+
+    if (!res.ok) {
+      // No releases yet — try tags instead
+      const tagsRes = await fetch(
+        `https://api.github.com/repos/${GITHUB_REPO}/tags?per_page=1`,
+        { headers: { "User-Agent": "OpenLog/" + CURRENT_VERSION } }
+      );
+      if (tagsRes.ok) {
+        const tags = await tagsRes.json() as Array<{ name: string }>;
+        if (tags.length > 0) {
+          const latest = tags[0].name.replace(/^v/, "");
+          const data = {
+            current: CURRENT_VERSION,
+            latest,
+            updateAvailable: latest !== CURRENT_VERSION,
+            url: `https://github.com/${GITHUB_REPO}`,
+          };
+          updateCache = { data, ts: Date.now() };
+          return data;
+        }
+      }
+      // No releases or tags
+      const data = { current: CURRENT_VERSION, latest: CURRENT_VERSION, updateAvailable: false, url: `https://github.com/${GITHUB_REPO}` };
+      updateCache = { data, ts: Date.now() };
+      return data;
+    }
+
+    const release = await res.json() as { tag_name: string; html_url: string; body?: string };
+    const latest = release.tag_name.replace(/^v/, "");
+    const data = {
+      current: CURRENT_VERSION,
+      latest,
+      updateAvailable: latest !== CURRENT_VERSION,
+      url: release.html_url,
+      notes: release.body?.slice(0, 500),
+    };
+    updateCache = { data, ts: Date.now() };
+    return data;
+  } catch {
+    return { current: CURRENT_VERSION, latest: CURRENT_VERSION, updateAvailable: false, error: "Could not reach GitHub" };
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Request router
 // ---------------------------------------------------------------------------
 
@@ -1285,6 +1349,11 @@ async function handleRequest(req: Request): Promise<Response> {
         return jsonResponse(data);
       }
 
+      case "/api/version": {
+        const data = await checkForUpdate();
+        return jsonResponse(data);
+      }
+
       default:
         return errorResponse("Not Found", 404);
     }
@@ -1303,7 +1372,7 @@ const server = Bun.serve({
   fetch: handleRequest,
 });
 
-console.log(`\n  OpenLog — Claude Code Analytics Dashboard`);
+console.log(`\n  OpenLog v${CURRENT_VERSION} — Claude Code Analytics Dashboard`);
 console.log(`  ─────────────────────────────────────────`);
 console.log(`  Local:   http://localhost:${PORT}`);
 console.log(`  Data:    ${PROJECTS_DIR}`);
