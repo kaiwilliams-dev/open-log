@@ -325,7 +325,7 @@
     <div class="card-grid" id="port-cards"><span class="ld">...</span></div>
   </section>
 
-  <footer class="footer"><span>OpenLog v0.1.1</span></footer>
+  <footer class="footer"><span>OpenLog v0.1.2</span></footer>
 </main>
 
 <script>
@@ -355,16 +355,20 @@ function updateFavicon(pct) {
   document.head.appendChild(link);
 }
 
-// ── Sync Timer ──
+// ── Sync Timer (with console logging) ──
 let lastSyncTs=0;
 async function updateSyncBar(){
   try{
     const l=await A('/api/limits');
+    console.log('%c[Sync]','color:#D4775C;font-weight:bold',
+      l.available?`age=${l.age_seconds}s pct=${l.five_hour?.pct}% stale=${l.stale}`:'no data available');
     if(l.available){
       lastSyncTs=l.ts*1000;const age=Math.floor((Date.now()-lastSyncTs)/1000);
-      document.getElementById('sync-text').textContent=`Last sync: ${age<60?age+'s':Math.floor(age/60)+'m'} ago`;
-    }else{document.getElementById('sync-text').textContent='Auto-syncing...'}
-  }catch(e){}}
+      const ageStr=age<60?age+'s':Math.floor(age/60)+'m';
+      document.getElementById('sync-text').textContent=`Last sync: ${ageStr} ago`;
+      if(age>300)document.getElementById('sync-text').textContent+=` (auto-sync active)`;
+    }else{document.getElementById('sync-text').textContent='Waiting for first sync...'}
+  }catch(e){console.error('[Sync] Error:',e)}}
 
 // ── Usage ──
 async function loadUsage(){
@@ -624,6 +628,8 @@ async function init(){
   await loadStats();
   // Priority 3: Everything else in parallel
   Promise.allSettled([loadAct(),loadSk(),loadHk(),loadHm(),loadSe(),loadPorts(),updateSyncBar(),loadLimitsHistory()]);
+  // Debug: dump sync state to console on load
+  try{const sd=await A('/api/sync-debug');console.log('%c[Sync Debug]','color:#D4775C;font-weight:bold','Full state:',sd)}catch{}
   // History is HEAVY (1.15GB scan) — only load when user scrolls to it
   let histLoaded=false;
   const histSection=document.getElementById('hist');

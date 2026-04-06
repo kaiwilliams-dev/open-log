@@ -1349,23 +1349,43 @@ const AUTO_SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 async function autoSync() {
   try {
     const limits = await readLimits();
-    // Only sync if data is stale (>5 min old) or missing
-    if (!limits.available || (limits as any).stale) {
-      console.log(`[OpenLog] Auto-syncing limits...`);
+    const age = (limits as any).age_seconds ?? Infinity;
+    console.log(`[AutoSync] Checking — age=${age}s, available=${limits.available}, stale=${(limits as any).stale}`);
+
+    // Sync if data is stale (>3 min old) or missing
+    if (!limits.available || age > 180) {
+      console.log(`[AutoSync] Triggering sync (data is ${age}s old)...`);
       const result = await syncLimits();
       if ((result as any).limits_captured) {
         const lim = (result as any).limits as Record<string, any>;
-        console.log(`[OpenLog] Synced: 5h=${lim?.five_hour?.pct}% 7d=${lim?.seven_day?.pct}% (${(result as any).elapsed_ms}ms)`);
+        console.log(`[AutoSync] ✓ Synced: 5h=${lim?.five_hour?.pct}% 7d=${lim?.seven_day?.pct}% (${(result as any).elapsed_ms}ms)`);
       } else {
-        console.log(`[OpenLog] Sync completed but no limits captured (${(result as any).elapsed_ms}ms)`);
+        console.log(`[AutoSync] ✗ Sync failed — no limits captured (${(result as any).elapsed_ms}ms). Retrying in 30s...`);
+        // Retry once after 30s
+        setTimeout(async () => {
+          try {
+            console.log(`[AutoSync] Retry attempt...`);
+            const retry = await syncLimits();
+            if ((retry as any).limits_captured) {
+              const lim = (retry as any).limits as Record<string, any>;
+              console.log(`[AutoSync] ✓ Retry succeeded: 5h=${lim?.five_hour?.pct}% (${(retry as any).elapsed_ms}ms)`);
+            } else {
+              console.log(`[AutoSync] ✗ Retry also failed (${(retry as any).elapsed_ms}ms)`);
+            }
+          } catch (e) { console.error(`[AutoSync] Retry error:`, e); }
+        }, 30_000);
       }
+    } else {
+      console.log(`[AutoSync] Skipped — data is fresh (${age}s old)`);
     }
   } catch (err) {
-    console.error(`[OpenLog] Auto-sync error:`, err);
+    console.error(`[AutoSync] Error:`, err);
   }
 }
 
 // Auto-sync enabled — runs every 5 minutes to keep limits data live
+// First sync 15s after startup (let server stabilize), then every 5 min
+setTimeout(autoSync, 15_000);
 setInterval(autoSync, AUTO_SYNC_INTERVAL_MS);
 
 // ---------------------------------------------------------------------------
@@ -1558,6 +1578,20 @@ async function handleRequest(req: Request): Promise<Response> {
       case "/api/sync-costs": {
         const data = await readSyncCosts();
         return jsonResponse(data);
+      }
+
+      case "/api/sync-debug": {
+        const limits = await readLimits();
+        const history = await readLimitsHistory();
+        const lastEntries = (history as any).entries?.slice(-5) ?? [];
+        const syncCosts = await readSyncCosts();
+        return jsonResponse({
+          currentLimits: limits,
+          lastSyncs: lastEntries,
+          syncCosts,
+          autoSyncInterval: AUTO_SYNC_INTERVAL_MS / 1000 + "s",
+          syncInProgress,
+        });
       }
 
       case "/api/ports": {
